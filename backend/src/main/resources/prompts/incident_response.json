@@ -1,0 +1,16 @@
+{
+  "confidence": 95,
+  "recommendation": "Execute Runbook RB-CERT-001: renew the expiring certificate on RTR-FRA-001, restart the routing process, then verify BGP/connectivity restoration before closing the incident.",
+  "reasoning": "The certificate on RTR-FRA-001 expires in 2 days, and this pattern exactly matches three prior incidents (INC-0891, INC-0754, INC-0612), all root-caused to expired SSL certificates on this class of device, all resolved via certificate renewal plus a routing process restart within 28-35 minutes with historical confidence scores of 91-96. The concurrent CPU spike (98%) and BGP flapping are consistent downstream symptoms of certificate-driven routing process instability rather than independent faults, matching the same causal chain seen in all three historical cases.",
+  "businessImpact": "RTR-FRA-001 carries SEPA Payments traffic out of Frankfurt. Continued BGP flapping and packet loss risk degraded or interrupted SEPA payment routing. Risk is elevated by the device's lifecycle status (EOS in 4 months), which limits vendor support runway if remediation is delayed or a deeper fault emerges.",
+  "approvalRequired": true,
+  "evidence": [
+    "Certificate expires in 2 days",
+    "CPU utilization at 98%",
+    "BGP flapping observed",
+    "Packet loss observed",
+    "Three historical incidents (INC-0891, INC-0754, INC-0612) with identical root cause and successful resolution via the same runbook",
+    "Device supports SEPA Payments, a critical business service",
+    "Device lifecycle status: EOS in 4 months"
+  ]
+}
