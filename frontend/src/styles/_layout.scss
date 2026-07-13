@@ -1,0 +1,33 @@
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--app-background);
+}
+
+.sidenav-container {
+  flex: 1;
+  background: transparent;
+}
+
+.content-area {
+  padding: 2rem;
+  min-height: calc(100vh - 64px);
+}
+
+.page-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+@media (max-width: 768px) {
+  .content-area {
+    padding: 1.25rem;
+  }
+}

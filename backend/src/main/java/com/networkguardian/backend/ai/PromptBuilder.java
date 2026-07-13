@@ -4,17 +4,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
-import com.networkguardian.backend.incident.context.HistoricalIncident;
 import com.networkguardian.backend.incident.context.IncidentContext;
-import com.networkguardian.backend.incident.context.Runbook;
 import com.networkguardian.backend.incident.model.Device;
+import com.networkguardian.backend.incident.model.HistoricalIncident;
 import com.networkguardian.backend.incident.model.Incident;
+import com.networkguardian.backend.incident.model.Runbook;
 
 @Component
 public class PromptBuilder {
@@ -36,7 +37,7 @@ public class PromptBuilder {
         try {
             ClassPathResource resource = new ClassPathResource(PROMPT_TEMPLATE_PATH);
             try (InputStream inputStream = resource.getInputStream()) {
-                return StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);
+                return StreamUtils.copyToString(inputStream, Objects.requireNonNull(StandardCharsets.UTF_8));
             }
         } catch (IOException e) {
             throw new IllegalStateException("Unable to load prompt template: " + PROMPT_TEMPLATE_PATH, e);
@@ -102,7 +103,7 @@ public class PromptBuilder {
 
     private String formatHistory(List<HistoricalIncident> historicalIncidents) {
         return historicalIncidents.stream()
-                .map(h -> "- %s | Root Cause: %s | Resolution: %s | Resolved In: %d min | Confidence: .1%f"
+            .map(h -> "- %s | Root Cause: %s | Resolution: %s | Resolved In: %d min | Confidence: %.1f"
                         .formatted(
                                 h.getIncidentId(),
                                 h.getRootCause(),

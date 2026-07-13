@@ -11,7 +11,7 @@ import com.networkguardian.backend.common.dto.DecisionResponse;
 import com.networkguardian.backend.incident.service.IncidentDecisionService;
 
 @RestController
-@RequestMapping("/decision-engines")
+@RequestMapping("/api/decision-engines")
 public class 
 DecisionController {
 

@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networkguardian.backend.common.dto.AIResponse;
 
 @Component("geminiClient")
+@SuppressWarnings("null")
 public class GeminiClient implements AIClient {
 
     private static final Duration TIMEOUT = Duration.ofSeconds(30);

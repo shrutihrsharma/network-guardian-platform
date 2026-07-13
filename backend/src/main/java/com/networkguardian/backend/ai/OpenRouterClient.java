@@ -4,6 +4,7 @@ import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -16,10 +17,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networkguardian.backend.common.dto.AIResponse;
 
 @Component("openRouterClient")
+@SuppressWarnings("null")
 public class OpenRouterClient implements AIClient {
 
     private static final Duration TIMEOUT = Duration.ofSeconds(30);
-    private static final String PROVIDER_NAME = "openrouter";
 
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
@@ -42,7 +43,7 @@ public class OpenRouterClient implements AIClient {
         this.temperature = temperature;
         this.objectMapper = objectMapper;
         this.restClient = RestClient.builder()
-                .baseUrl(baseUrl)
+                .baseUrl(Objects.requireNonNull(baseUrl, "ai.base-url must not be null"))
                 .requestFactory(buildRequestFactory())
                 .build();
     }
@@ -101,12 +102,13 @@ public class OpenRouterClient implements AIClient {
     }
 
     private String extractContent(String rawResponse) {
+        String safeRawResponse = Objects.requireNonNull(rawResponse, "OpenRouter returned null response body");
         try {
-            JsonNode root = objectMapper.readTree(rawResponse);
+            JsonNode root = objectMapper.readTree(safeRawResponse);
             JsonNode choices = root.path("choices");
 
             if (!choices.isArray() || choices.isEmpty()) {
-                throw new RuntimeException("OpenRouter response contained no choices: " + rawResponse);
+                throw new RuntimeException("OpenRouter response contained no choices: " + safeRawResponse);
             }
 
             return choices.get(0).path("message").path("content").asText();
@@ -114,7 +116,7 @@ public class OpenRouterClient implements AIClient {
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
-            throw new RuntimeException("Failed to parse OpenRouter response: " + rawResponse, e);
+            throw new RuntimeException("Failed to parse OpenRouter response: " + safeRawResponse, e);
         }
     }
 }

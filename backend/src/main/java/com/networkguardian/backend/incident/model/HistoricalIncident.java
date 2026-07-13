@@ -1,4 +1,7 @@
-package com.networkguardian.backend.incident.context;
+package com.networkguardian.backend.incident.model;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +12,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Document(collection = "historical_incidents")
 public class HistoricalIncident {
 
+    @Id
+    private String id;
     private String incidentId;
     private String rootCause;
     private String resolution;

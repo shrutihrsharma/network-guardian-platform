@@ -3,76 +3,60 @@ package com.networkguardian.backend.incident.context;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.networkguardian.backend.incident.model.Device;
+import com.networkguardian.backend.incident.model.HistoricalIncident;
 import com.networkguardian.backend.incident.model.Incident;
+import com.networkguardian.backend.incident.model.Runbook;
+import com.networkguardian.backend.repository.DeviceRepository;
+import com.networkguardian.backend.repository.HistoricalIncidentRepository;
+import com.networkguardian.backend.repository.IncidentRepository;
+import com.networkguardian.backend.repository.RunbookRepository;
 
 @Component
+@SuppressWarnings("null")
 public class IncidentContextBuilder {
 
+    private static final Logger log = LoggerFactory.getLogger(IncidentContextBuilder.class);
+
+    private final IncidentRepository incidentRepository;
+    private final DeviceRepository deviceRepository;
+    private final RunbookRepository runbookRepository;
+    private final HistoricalIncidentRepository historicalIncidentRepository;
+
+    public IncidentContextBuilder(
+            IncidentRepository incidentRepository,
+            DeviceRepository deviceRepository,
+            RunbookRepository runbookRepository,
+            HistoricalIncidentRepository historicalIncidentRepository) {
+        this.incidentRepository = incidentRepository;
+        this.deviceRepository = deviceRepository;
+        this.runbookRepository = runbookRepository;
+        this.historicalIncidentRepository = historicalIncidentRepository;
+    }
+
     public IncidentContext build(String incidentId) {
+        log.info("Loading incident {}", incidentId);
+        Incident incident = incidentRepository.findById(incidentId)
+            .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Incident not found: " + incidentId));
 
-        Device device = Device.builder()
-                .id("RTR-FRA-001")
-                .hostname("RTR-FRA-001")
-                .vendor("Cisco")
-                .model("ASR1001-X")
-                .location("Frankfurt")
-                .businessService("SEPA Payments")
-                .osVersion("IOS XE 17.2")
-                .lifecycleStatus("EOS in 4 months")
-                .build();
+        log.info("Loading associated device {}", incident.getDeviceId());
+        Device device = deviceRepository.findById(incident.getDeviceId())
+            .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Device not found for incident " + incidentId + ": " + incident.getDeviceId()));
 
-        Incident incident = Incident.builder()
-                .id(incidentId)
-                .deviceId(device.getId())
-                .severity("Critical")
-                .status("OPEN")
-                .symptoms(List.of(
-                        "CPU 98%",
-                        "Packet Loss",
-                        "BGP Flapping",
-                        "Certificate expires in 2 days"
-                ))
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        Runbook runbook = Runbook.builder()
-                .runbookId("RB-CERT-001")
-                .title("Certificate Renewal and Routing Recovery")
-                .owner("Network Operations")
-                .version("1.0")
-                .steps(List.of(
-                        "Renew Certificate",
-                        "Restart Routing Process",
-                        "Verify Connectivity"
-                ))
-                .build();
-
-        List<HistoricalIncident> historicalIncidents = List.of(
-                HistoricalIncident.builder()
-                        .incidentId("INC-0891")
-                        .rootCause("Expired SSL Certificate")
-                        .resolution("Certificate renewed and routing process restarted")
-                        .resolvedInMinutes(32)
-                        .resolutionConfidence(96.0)
-                        .build(),
-                HistoricalIncident.builder()
-                        .incidentId("INC-0754")
-                        .rootCause("Expired SSL Certificate")
-                        .resolution("Certificate renewed and routing process restarted")
-                        .resolvedInMinutes(28)
-                        .resolutionConfidence(93.0)
-                        .build(),
-                HistoricalIncident.builder()
-                        .incidentId("INC-0612")
-                        .rootCause("Expired SSL Certificate")
-                        .resolution("Certificate renewed and routing process restarted")
-                        .resolvedInMinutes(35)
-                        .resolutionConfidence(91.0)
-                        .build()
-        );
+        Runbook runbook = resolveRunbook(incident);
+        log.info("Loading historical incidents for {}", incidentId);
+        List<HistoricalIncident> historicalIncidents = historicalIncidentRepository.findByIncidentId(incidentId);
+        log.info("Loading {} historical incidents", historicalIncidents.size());
 
         return IncidentContext.builder()
                 .device(device)
@@ -83,5 +67,19 @@ public class IncidentContextBuilder {
                 .lifecycleStatus(device.getLifecycleStatus())
                 .decisionTimestamp(LocalDateTime.now())
                 .build();
+    }
+
+    private Runbook resolveRunbook(Incident incident) {
+        if (incident.getRunbookId() == null || incident.getRunbookId().isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Runbook missing for incident: " + incident.getId());
+        }
+
+        log.info("Loading runbook {}", incident.getRunbookId());
+        return runbookRepository.findById(incident.getRunbookId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Runbook not found: " + incident.getRunbookId()));
     }
 }

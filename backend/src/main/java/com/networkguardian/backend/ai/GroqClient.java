@@ -18,6 +18,7 @@ import com.networkguardian.backend.common.dto.AIResponse;
 
 @Component("groqClient")
 @ConditionalOnProperty(prefix = "ai", name = "provider", havingValue = "groq")
+@SuppressWarnings("null")
 public class GroqClient implements AIClient {
 
     private static final Duration TIMEOUT = Duration.ofSeconds(30);

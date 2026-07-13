@@ -13,7 +13,7 @@ import com.networkguardian.backend.audit.service.DecisionAuditService;
 import com.networkguardian.backend.common.dto.DecisionAudit;
 
 @RestController
-@RequestMapping("/decision-engines")
+@RequestMapping("/api/decision-engines")
 public class DecisionAuditController {
 
     private final DecisionAuditService decisionAuditService;
