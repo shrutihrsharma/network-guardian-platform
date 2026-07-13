@@ -1,4 +1,4 @@
 export const environment = {
   production: false,
-  apiBaseUrl: '/api'
+  apiBaseUrl: 'https://network-guardian-platform-production.up.railway.app'
 };
