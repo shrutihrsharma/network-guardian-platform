@@ -128,6 +128,7 @@ import {
             [devices]="filtered()"
             [selectedDevice]="selectedDevice()"
             (deviceSelected)="selectDevice($event)"
+            (analyzeRequested)="onAnalyzeRequested($event)"
           />
 
           @if (dashboard()) {
@@ -139,6 +140,7 @@ import {
         <div class="right-col">
           <app-lifecycle-ai-panel
             [device]="selectedDevice()"
+            [triggerAnalyze]="shouldTriggerAnalyze()"
             (decisionComplete)="onDecision()"
           />
 
@@ -336,6 +338,7 @@ export class LifecyclePageComponent implements OnInit {
   protected readonly dashboard = signal<LifecycleDashboardStats | null>(null);
   protected readonly vendors = signal<string[]>([]);
   protected readonly selectedDevice = signal<DeviceLifecycleSummary | null>(null);
+  protected readonly shouldTriggerAnalyze = signal(false);
   protected readonly errorMsg = signal<string | null>(null);
 
   protected filters: LifecycleFilters = {
@@ -384,12 +387,17 @@ export class LifecyclePageComponent implements OnInit {
     this.selectedDevice.set(device);
   }
 
+  protected onAnalyzeRequested(device: DeviceLifecycleSummary) {
+    this.shouldTriggerAnalyze.set(true);
+  }
+
   protected clearFilters() {
     this.filters = { vendor: '', region: '', family: '', lifecycleStage: '', criticality: '', businessService: '', search: '' };
   }
 
   protected onDecision() {
     // Refresh dashboard after a new decision is stored
+    this.shouldTriggerAnalyze.set(false);
     this.api.getDashboard().subscribe({ next: d => this.dashboard.set(d) });
   }
 }

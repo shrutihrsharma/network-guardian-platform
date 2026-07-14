@@ -74,7 +74,7 @@ import { DeviceLifecycleSummary, STAGE_CONFIG, LifecycleStage } from '../../../c
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef>Actions</th>
           <td mat-cell *matCellDef="let row">
-            <button mat-icon-button class="action-btn" (click)="deviceSelected.emit(row)" title="Analyse lifecycle">
+            <button mat-icon-button class="action-btn" (click)="onAnalyzeClick(row)" title="Analyse lifecycle">
               <mat-icon>psychology</mat-icon>
             </button>
           </td>
@@ -100,8 +100,28 @@ import { DeviceLifecycleSummary, STAGE_CONFIG, LifecycleStage } from '../../../c
     .table-wrap {
       border: 1px solid var(--app-card-border);
       border-radius: var(--app-radius);
-      overflow: hidden;
       background: var(--app-card-bg);
+      max-height: 42rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .table-wrap::-webkit-scrollbar {
+      width: 0.5rem;
+    }
+
+    .table-wrap::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .table-wrap::-webkit-scrollbar-thumb {
+      background: var(--app-border);
+      border-radius: 0.25rem;
+    }
+
+    .table-wrap::-webkit-scrollbar-thumb:hover {
+      background: var(--app-text-muted);
     }
 
     .lc-table {
@@ -232,6 +252,7 @@ export class LifecycleTableComponent {
   readonly devices = input.required<DeviceLifecycleSummary[]>();
   readonly selectedDevice = input<DeviceLifecycleSummary | null>(null);
   readonly deviceSelected = output<DeviceLifecycleSummary>();
+  readonly analyzeRequested = output<DeviceLifecycleSummary>();
 
   readonly columns = ['hostname', 'region', 'osVersion', 'lifecycleStage', 'daysUntilUnsupported', 'criticality', 'actions'];
 
@@ -243,5 +264,10 @@ export class LifecycleTableComponent {
     if (days < 0 || days <= 90) return 'days-critical';
     if (days <= 365) return 'days-warning';
     return 'days-ok';
+  }
+
+  onAnalyzeClick(device: DeviceLifecycleSummary): void {
+    this.deviceSelected.emit(device);
+    this.analyzeRequested.emit(device);
   }
 }

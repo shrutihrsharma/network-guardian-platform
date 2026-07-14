@@ -4,6 +4,7 @@ import {
   input,
   output,
   signal,
+  effect,
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -353,12 +354,19 @@ import { LifecycleApiService } from '../../../core/services/lifecycle-api.servic
 export class LifecycleAiPanelComponent {
   readonly device = input<DeviceLifecycleSummary | null>(null);
   readonly decisionComplete = output<DecisionResponse>();
+  readonly triggerAnalyze = input(false);
 
   protected readonly loading = signal(false);
   protected readonly result = signal<DecisionResponse | null>(null);
   protected readonly errorMsg = signal<string | null>(null);
 
-  constructor(private readonly api: LifecycleApiService) {}
+  constructor(private readonly api: LifecycleApiService) {
+    effect(() => {
+      if (this.triggerAnalyze() && this.device() && !this.loading()) {
+        this.analyze();
+      }
+    });
+  }
 
   protected analyze() {
     const d = this.device();
