@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.networkguardian.backend.ai.AIDecisionModule;
 import com.networkguardian.backend.ai.AIClient;
 import com.networkguardian.backend.ai.PromptBuilder;
 import com.networkguardian.backend.audit.service.DecisionAuditService;
@@ -21,7 +22,7 @@ import com.networkguardian.backend.common.dto.DecisionRequest;
 import com.networkguardian.backend.common.dto.DecisionResponse;
 
 @Service
-public class IncidentDecisionService {
+public class IncidentDecisionService implements AIDecisionModule {
 
     private static final Logger log = LoggerFactory.getLogger(IncidentDecisionService.class);
 
@@ -45,6 +46,12 @@ public class IncidentDecisionService {
         this.decisionAuditService = decisionAuditService;
     }
 
+    @Override
+    public String moduleName() {
+        return "INCIDENT";
+    }
+
+    @Override
     public DecisionResponse execute(DecisionRequest request) {
 
         IncidentContext incidentContext = incidentContextBuilder.build(request.getIncidentId());
@@ -79,6 +86,7 @@ public class IncidentDecisionService {
                 .decisionId(decisionId)
                 .timestamp(LocalDateTime.now())
                 .incidentId(request.getIncidentId())
+                .module("INCIDENT")
                 .engine(request.getEngine())
                 .provider(aiResponse.getProvider())
                 .model(aiResponse.getModel())

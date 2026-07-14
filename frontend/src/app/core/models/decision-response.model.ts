@@ -12,4 +12,9 @@ export interface DecisionResponse {
   model: string;
   executionTimeMs: number;
   promptVersion: string;
+  // Lifecycle-specific (optional)
+  risk?: string;
+  summary?: string;
+  recommendedVersion?: string;
+  recommendedWindow?: string;
 }

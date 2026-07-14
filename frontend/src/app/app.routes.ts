@@ -26,13 +26,7 @@ export const routes: Routes = [
   {
     path: 'lifecycle',
     loadComponent: () =>
-      import('./features/platform/pages/module-placeholder-page.component').then((m) => m.ModulePlaceholderPageComponent),
-    data: {
-      title: 'Lifecycle',
-      breadcrumb: 'Lifecycle',
-      description: 'Lifecycle governance dashboard for support status, milestones, and upgrade planning.',
-      widgets: ['Lifecycle Distribution', 'Upcoming Milestones', 'EOS Exposure', 'Lifecycle Action Queue']
-    }
+      import('./features/lifecycle/pages/lifecycle-page.component').then((m) => m.LifecyclePageComponent)
   },
   {
     path: 'compliance',

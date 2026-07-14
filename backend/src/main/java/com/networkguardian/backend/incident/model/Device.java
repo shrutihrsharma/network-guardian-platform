@@ -24,4 +24,8 @@ public class Device {
     private String businessService;
     private String osVersion;
     private String lifecycleStatus;
+    /** Reference to software_lifecycle collection. */
+    private String lifecycleId;
+    /** Device product family (e.g. Catalyst 9300, MX 480). */
+    private String family;
 }

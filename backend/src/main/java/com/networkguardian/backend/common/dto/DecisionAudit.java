@@ -22,6 +22,8 @@ public class DecisionAudit {
     private LocalDateTime timestamp;
     private String incidentId;
     private String engine;
+    /** Module that produced this decision: INCIDENT, LIFECYCLE, etc. */
+    private String module;
     private String provider;
     private String model;
     private String prompt;

@@ -26,4 +26,9 @@ public class DecisionResponse {
     private String model;
     private long executionTimeMs;
     private String promptVersion;
+    // Lifecycle-specific fields (null for other modules)
+    private String risk;
+    private String summary;
+    private String recommendedVersion;
+    private String recommendedWindow;
 }
