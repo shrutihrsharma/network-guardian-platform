@@ -1,5 +1,7 @@
 package com.networkguardian.backend.incident.model;
 
+import java.util.List;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -22,4 +24,5 @@ public class HistoricalIncident {
     private String resolution;
     private int resolvedInMinutes;
     private double resolutionConfidence;
+    private List<Double> embedding;
 }

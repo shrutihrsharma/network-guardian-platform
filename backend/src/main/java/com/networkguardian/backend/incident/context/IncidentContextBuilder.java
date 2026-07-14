@@ -13,6 +13,7 @@ import com.networkguardian.backend.incident.model.Device;
 import com.networkguardian.backend.incident.model.HistoricalIncident;
 import com.networkguardian.backend.incident.model.Incident;
 import com.networkguardian.backend.incident.model.Runbook;
+import com.networkguardian.backend.incident.rag.IncidentRAGService;
 import com.networkguardian.backend.repository.DeviceRepository;
 import com.networkguardian.backend.repository.HistoricalIncidentRepository;
 import com.networkguardian.backend.repository.IncidentRepository;
@@ -28,16 +29,19 @@ public class IncidentContextBuilder {
     private final DeviceRepository deviceRepository;
     private final RunbookRepository runbookRepository;
     private final HistoricalIncidentRepository historicalIncidentRepository;
+    private final IncidentRAGService ragService;
 
     public IncidentContextBuilder(
             IncidentRepository incidentRepository,
             DeviceRepository deviceRepository,
             RunbookRepository runbookRepository,
-            HistoricalIncidentRepository historicalIncidentRepository) {
+            HistoricalIncidentRepository historicalIncidentRepository,
+            IncidentRAGService ragService) {
         this.incidentRepository = incidentRepository;
         this.deviceRepository = deviceRepository;
         this.runbookRepository = runbookRepository;
         this.historicalIncidentRepository = historicalIncidentRepository;
+        this.ragService = ragService;
     }
 
     public IncidentContext build(String incidentId) {
@@ -54,9 +58,9 @@ public class IncidentContextBuilder {
                 "Device not found for incident " + incidentId + ": " + incident.getDeviceId()));
 
         Runbook runbook = resolveRunbook(incident);
-        log.info("Loading historical incidents for {}", incidentId);
-        List<HistoricalIncident> historicalIncidents = historicalIncidentRepository.findByIncidentId(incidentId);
-        log.info("Loading {} historical incidents", historicalIncidents.size());
+        log.info("RAG: retrieving similar historical incidents for symptoms {}", incident.getSymptoms());
+        List<HistoricalIncident> historicalIncidents = ragService.findSimilar(incident.getSymptoms());
+        log.info("RAG: retrieved {} similar historical incidents", historicalIncidents.size());
 
         return IncidentContext.builder()
                 .device(device)

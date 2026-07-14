@@ -14,6 +14,7 @@ import com.networkguardian.backend.incident.model.Device;
 import com.networkguardian.backend.incident.model.HistoricalIncident;
 import com.networkguardian.backend.incident.model.Incident;
 import com.networkguardian.backend.incident.model.Runbook;
+import com.networkguardian.backend.incident.rag.IncidentRAGService;
 import com.networkguardian.backend.repository.DeviceRepository;
 import com.networkguardian.backend.repository.HistoricalIncidentRepository;
 import com.networkguardian.backend.repository.IncidentRepository;
@@ -57,7 +58,8 @@ class IncidentContextBuilderTest {
                 .steps(List.of("Check route flaps"))
                 .build()));
 
-        when(historicalIncidentRepository.findByIncidentId("INC-1001")).thenReturn(List.of(HistoricalIncident.builder()
+        IncidentRAGService ragService = mock(IncidentRAGService.class);
+        when(ragService.findSimilar(List.of("CPU 98%"))).thenReturn(List.of(HistoricalIncident.builder()
                 .id("HIS-1")
                 .incidentId("INC-1001")
                 .rootCause("Route flap")
@@ -70,7 +72,8 @@ class IncidentContextBuilderTest {
                 incidentRepository,
                 deviceRepository,
                 runbookRepository,
-                historicalIncidentRepository
+                historicalIncidentRepository,
+                ragService
         );
 
         IncidentContext context = builder.build("INC-1001");

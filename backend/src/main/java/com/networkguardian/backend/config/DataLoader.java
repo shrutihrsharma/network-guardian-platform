@@ -18,6 +18,7 @@ import com.networkguardian.backend.incident.model.HistoricalIncident;
 import com.networkguardian.backend.incident.model.Incident;
 import com.networkguardian.backend.incident.model.Runbook;
 import com.networkguardian.backend.lifecycle.model.SoftwareLifecycle;
+import com.networkguardian.backend.incident.rag.IncidentRAGService;
 import com.networkguardian.backend.repository.DecisionAuditRepository;
 import com.networkguardian.backend.repository.DeviceRepository;
 import com.networkguardian.backend.repository.HistoricalIncidentRepository;
@@ -38,6 +39,7 @@ public class DataLoader {
     private final HistoricalIncidentRepository historicalIncidentRepository;
     private final SoftwareLifecycleRepository softwareLifecycleRepository;
     private final DecisionAuditRepository decisionAuditRepository;
+    private final IncidentRAGService incidentRAGService;
     private final Random random = new Random(42);
 
     public DataLoader(
@@ -46,13 +48,15 @@ public class DataLoader {
             RunbookRepository runbookRepository,
             HistoricalIncidentRepository historicalIncidentRepository,
             SoftwareLifecycleRepository softwareLifecycleRepository,
-            DecisionAuditRepository decisionAuditRepository) {
+            DecisionAuditRepository decisionAuditRepository,
+            IncidentRAGService incidentRAGService) {
         this.incidentRepository = incidentRepository;
         this.deviceRepository = deviceRepository;
         this.runbookRepository = runbookRepository;
         this.historicalIncidentRepository = historicalIncidentRepository;
         this.softwareLifecycleRepository = softwareLifecycleRepository;
         this.decisionAuditRepository = decisionAuditRepository;
+        this.incidentRAGService = incidentRAGService;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -102,6 +106,24 @@ public class DataLoader {
         }
 
         log.info("Data seeding completed successfully.");
+
+        backfillEmbeddings();
+    }
+
+    private void backfillEmbeddings() {
+        List<HistoricalIncident> missing = historicalIncidentRepository.findAll().stream()
+                .filter(h -> h.getEmbedding() == null || h.getEmbedding().isEmpty())
+                .toList();
+        if (missing.isEmpty()) return;
+        log.info("RAG: backfilling embeddings for {} historical incidents...", missing.size());
+        missing.forEach(h -> {
+            try {
+                incidentRAGService.embedAndSave(h);
+            } catch (Exception e) {
+                log.warn("RAG: failed to embed historical incident {}: {}", h.getId(), e.getMessage());
+            }
+        });
+        log.info("RAG: embedding backfill complete.");
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
