@@ -13,10 +13,11 @@
 .content-area {
   padding: 2rem;
   min-height: calc(100vh - 64px);
+  background: var(--app-background);
 }
 
 .page-shell {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
@@ -24,6 +25,20 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1.25rem;
+}
+
+/* Shared card style used across pages */
+.stat-card {
+  background: var(--app-card-bg);
+  border: 1px solid var(--app-card-border);
+  border-radius: var(--app-radius);
+  padding: 1.5rem;
+  box-shadow: var(--app-shadow-sm);
+  transition: border-color 0.2s;
+}
+
+.stat-card:hover {
+  border-color: rgba(245, 158, 11, 0.18);
 }
 
 @media (max-width: 768px) {

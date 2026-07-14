@@ -39,7 +39,7 @@ import { SideNavComponent } from './sidenav.component';
     }
 
     .app-sidenav {
-      width: 280px;
+      width: 240px;
       border-right: 1px solid var(--app-border);
       background: var(--app-surface);
     }
@@ -47,7 +47,7 @@ import { SideNavComponent } from './sidenav.component';
     .content-area {
       min-height: calc(100vh - 64px);
       padding: 2rem;
-      background: var(--app-content-gradient);
+      background: var(--app-background);
     }
 
     .page-shell {
