@@ -30,25 +30,7 @@ export const routes: Routes = [
   },
   {
     path: 'compliance',
-    loadComponent: () =>
-      import('./features/platform/pages/module-placeholder-page.component').then((m) => m.ModulePlaceholderPageComponent),
-    data: {
-      title: 'Compliance',
-      breadcrumb: 'Compliance',
-      description: 'Compliance posture monitoring with auditable controls and enterprise governance visibility.',
-      widgets: ['Patch Compliance', 'Certificate Posture', 'Configuration Drift', 'Compliance KRIs']
-    }
-  },
-  {
-    path: 'predictive-risk',
-    loadComponent: () =>
-      import('./features/platform/pages/module-placeholder-page.component').then((m) => m.ModulePlaceholderPageComponent),
-    data: {
-      title: 'Predictive Risk',
-      breadcrumb: 'Predictive Risk',
-      description: 'Predictive risk workspace for forecasting failure probability and operational impact.',
-      widgets: ['Risk Score Distribution', 'Highest Risk Devices', 'Failure Forecast', 'Recommended Mitigations']
-    }
+    loadChildren: () => import('./features/compliance/compliance.routes').then((m) => m.COMPLIANCE_ROUTES)
   },
   {
     path: 'decision-history',

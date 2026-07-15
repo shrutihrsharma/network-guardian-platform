@@ -13,12 +13,16 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import com.networkguardian.backend.compliance.model.ComplianceKri;
+import com.networkguardian.backend.compliance.service.ComplianceService;
 import com.networkguardian.backend.incident.model.Device;
 import com.networkguardian.backend.incident.model.HistoricalIncident;
 import com.networkguardian.backend.incident.model.Incident;
 import com.networkguardian.backend.incident.model.Runbook;
 import com.networkguardian.backend.lifecycle.model.SoftwareLifecycle;
+import com.networkguardian.backend.repository.ComplianceKriRepository;
 import com.networkguardian.backend.repository.DecisionAuditRepository;
+import com.networkguardian.backend.repository.DeviceComplianceRepository;
 import com.networkguardian.backend.repository.DeviceRepository;
 import com.networkguardian.backend.repository.HistoricalIncidentRepository;
 import com.networkguardian.backend.repository.IncidentRepository;
@@ -38,6 +42,9 @@ public class DataLoader {
     private final HistoricalIncidentRepository historicalIncidentRepository;
     private final SoftwareLifecycleRepository softwareLifecycleRepository;
     private final DecisionAuditRepository decisionAuditRepository;
+    private final ComplianceKriRepository complianceKriRepository;
+    private final DeviceComplianceRepository deviceComplianceRepository;
+    private final ComplianceService complianceService;
     private final Random random = new Random(42);
 
     public DataLoader(
@@ -46,13 +53,19 @@ public class DataLoader {
             RunbookRepository runbookRepository,
             HistoricalIncidentRepository historicalIncidentRepository,
             SoftwareLifecycleRepository softwareLifecycleRepository,
-            DecisionAuditRepository decisionAuditRepository) {
+            DecisionAuditRepository decisionAuditRepository,
+            ComplianceKriRepository complianceKriRepository,
+            DeviceComplianceRepository deviceComplianceRepository,
+            ComplianceService complianceService) {
         this.incidentRepository = incidentRepository;
         this.deviceRepository = deviceRepository;
         this.runbookRepository = runbookRepository;
         this.historicalIncidentRepository = historicalIncidentRepository;
         this.softwareLifecycleRepository = softwareLifecycleRepository;
         this.decisionAuditRepository = decisionAuditRepository;
+        this.complianceKriRepository = complianceKriRepository;
+        this.deviceComplianceRepository = deviceComplianceRepository;
+        this.complianceService = complianceService;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -99,6 +112,19 @@ public class DataLoader {
             log.info("Seeding historical_incidents...");
             historicalIncidentRepository.saveAll(generateHistoricalIncidents(incidents));
             log.info("✓ Seeded historical incidents");
+        }
+
+        if (complianceKriRepository.count() == 0) {
+            log.info("Seeding compliance_kri collection...");
+            List<ComplianceKri> kris = generateComplianceKris();
+            complianceKriRepository.saveAll(kris);
+            log.info("✓ Seeded {} compliance KRIs", kris.size());
+        }
+
+        if (deviceComplianceRepository.count() == 0 || deviceComplianceRepository.count() != deviceRepository.count()) {
+            log.info("Calculating device compliance for all devices...");
+            complianceService.recalculateAll();
+            log.info("✓ Calculated compliance for {} devices", deviceRepository.count());
         }
 
         log.info("Data seeding completed successfully.");
@@ -406,4 +432,106 @@ public class DataLoader {
         }
         return hist;
     }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        //  COMPLIANCE KRIs
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        private List<ComplianceKri> generateComplianceKris() {
+        LocalDateTime created = LocalDateTime.now().minusDays(45);
+
+        return List.of(
+            kri("KRI-001", "Unsupported Software %",
+                "Tracks devices that are already running unsupported software releases.",
+                "Lifecycle", "Critical", 0,
+                "PASS when lifecycle stage is not Unsupported."),
+            kri("KRI-002", "Devices in Disinvest",
+                "Flags devices currently in disinvest lifecycle stage.",
+                "Lifecycle", "High", 0,
+                "PASS when lifecycle stage is not Disinvest."),
+            kri("KRI-003", "Certificate Expiry",
+                "Captures certificate-related exposure based on lifecycle runway and certificate incidents.",
+                "Security", "Critical", 120,
+                "PASS when daysUntilUnsupported > 120 and no certificate incidents."),
+            kri("KRI-004", "Configuration Drift",
+                "Identifies drift from baseline using incident telemetry.",
+                "Configuration", "High", 1,
+                "PASS when no drift/configuration incidents and unresolved incidents < 2."),
+            kri("KRI-005", "Patch Age",
+                "Approximates stale patch posture from lifecycle runway.",
+                "Security", "High", 240,
+                "PASS when daysUntilUnsupported > 240 and stage is not Disinvest/Unsupported."),
+            kri("KRI-006", "Lifecycle Compliance",
+                "Ensures devices are in preferred Invest or Maintain stages.",
+                "Lifecycle", "High", 1,
+                "PASS when lifecycle stage is Invest or Maintain."),
+            kri("KRI-007", "Incident Recurrence",
+                "Measures repeat operational issues per device.",
+                "Incident", "High", 2,
+                "PASS when incident count is <= 2."),
+            kri("KRI-008", "Missing Backups",
+                "Uses unresolved load balancer incidents as a backup-control signal.",
+                "Operations", "Medium", 0,
+                "PASS when load balancers have no unresolved incidents."),
+            kri("KRI-009", "Configuration Baseline",
+                "Baseline adherence across lifecycle and incident severity.",
+                "Configuration", "Medium", 1,
+                "PASS when not in Engineering Testing and high/critical incidents <= 1."),
+            kri("KRI-010", "Critical Devices without Maintenance Window",
+                "Tracks Tier-1 service devices with elevated lifecycle or unresolved incident risk.",
+                "Operations", "Critical", 0,
+                "PASS when Tier-1 devices are not in legacy stage and have no unresolved incidents."),
+            kri("KRI-011", "Devices running Unsupported software",
+                "Absolute unsupported software control for governance reporting.",
+                "Lifecycle", "Critical", 0,
+                "PASS when lifecycle stage is not Unsupported."),
+            kri("KRI-012", "Open Critical Incidents",
+                "Identifies devices with open critical incidents.",
+                "Incident", "Critical", 0,
+                "PASS when there are no open critical incidents."),
+            kri("KRI-013", "Incident Resolution SLA",
+                "Monitors unresolved incident backlog against SLA threshold.",
+                "Incident", "High", 1,
+                "PASS when unresolved incidents are <= 1."),
+            kri("KRI-014", "Security Policy Violations",
+                "Detects policy/firewall incident signals for non-invest devices.",
+                "Security", "Medium", 0,
+                "PASS when no firewall/policy incidents, or lifecycle stage is Invest."),
+            kri("KRI-015", "End of Support Exposure",
+                "Flags devices approaching unsupported horizon.",
+                "Lifecycle", "High", 180,
+                "PASS when daysUntilUnsupported > 180."),
+            kri("KRI-016", "Repeated Change Failures",
+                "Combines drift and critical incidents to signal unstable change posture.",
+                "Change", "Medium", 1,
+                "PASS when driftIncidents + criticalIncidents <= 1."))
+            .stream()
+            .map(k -> {
+                k.setCreatedDate(created);
+                return k;
+            })
+            .toList();
+        }
+
+        private ComplianceKri kri(
+            String id,
+            String name,
+            String description,
+            String category,
+            String severity,
+            double threshold,
+            String measurementFormula) {
+        return ComplianceKri.builder()
+            .id(id)
+            .name(name)
+            .description(description)
+            .category(category)
+            .severity(severity)
+            .threshold(threshold)
+            .measurementFormula(measurementFormula)
+            .enabled(true)
+            .approved(true)
+            .aiGenerated(false)
+            .build();
+        }
 }

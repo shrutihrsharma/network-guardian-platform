@@ -149,7 +149,6 @@ export class SideNavComponent {
     { label: 'Incidents', icon: 'warning', route: '/incidents', enabled: true },
     { label: 'Lifecycle', icon: 'timeline', route: '/lifecycle', enabled: true },
     { label: 'Compliance', icon: 'verified_user', route: '/compliance', enabled: true },
-    { label: 'Predictive Risk', icon: 'analytics', route: '/predictive-risk', enabled: true },
     { label: 'Decision History', icon: 'history', route: '/decision-history', enabled: true },
     { label: 'Settings', icon: 'settings', route: '/settings', enabled: true }
   ];

@@ -33,19 +33,6 @@ export const DEVICES_ROUTES: Routes = [
       {
         path: 'compliance',
         loadComponent: () => import('./tabs/device-compliance-tab.component').then((m) => m.DeviceComplianceTabComponent)
-      },
-      {
-        path: 'predictive-risk',
-        loadComponent: () => import('./tabs/device-predictive-risk-tab.component').then((m) => m.DevicePredictiveRiskTabComponent)
-      },
-      {
-        path: 'ai-insights',
-        loadComponent: () => import('./tabs/device-ai-insights-tab.component').then((m) => m.DeviceAiInsightsTabComponent)
-      },
-      {
-        path: 'decision-history',
-        loadComponent: () =>
-          import('./tabs/device-decision-history-tab.component').then((m) => m.DeviceDecisionHistoryTabComponent)
       }
     ]
   }

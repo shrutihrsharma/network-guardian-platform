@@ -4,13 +4,13 @@ import {
   computed,
   input,
 } from '@angular/core';
-import { DecimalPipe, CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { LifecycleDashboardStats, VendorSummary } from '../../../core/models/lifecycle.model';
 
 @Component({
   selector: 'app-lifecycle-charts',
   standalone: true,
-  imports: [DecimalPipe, CommonModule],
+  imports: [CommonModule],
   template: `
     <div class="charts-grid">
       <!-- Vendor distribution stacked bar -->

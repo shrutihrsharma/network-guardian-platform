@@ -1,12 +1,12 @@
-import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { AiRecommendationPanelComponent } from '../../../shared/components/ai-recommendation-panel.component';
 import { DecisionResponse } from '../../../core/models/decision-response.model';
 import { IncidentSummary } from '../../../core/models/incident-summary.model';
 
 @Component({
   selector: 'app-analysis-workspace',
   standalone: true,
-  imports: [DecimalPipe],
+  imports: [AiRecommendationPanelComponent],
   template: `
     <section class="workspace-card">
       <div class="workspace-card__header">
@@ -26,30 +26,15 @@ import { IncidentSummary } from '../../../core/models/incident-summary.model';
           <div class="detail-row"><span>Business Service</span><strong>{{ incident()?.businessService || 'Pending' }}</strong></div>
         </div>
 
-        <div class="workspace-panel">
-          <h4>Recommendation</h4>
-          <div class="recommendation-title">{{ response()?.recommendation || 'Pending' }}</div>
-          <div class="detail-row"><span>Confidence</span><strong>{{ response()?.confidence ? (response()?.confidence | number:'1.0-0') + '%' : 'Pending' }}</strong></div>
-          <div class="detail-row"><span>Business Impact</span><strong>{{ response()?.businessImpact || 'Pending' }}</strong></div>
-          <div class="detail-row"><span>Approval Required</span><strong>{{ response()?.approvalRequired ? 'Yes' : 'No' }}</strong></div>
-          <div class="detail-row"><span>Decision Id</span><strong>{{ response()?.decisionId || 'Pending' }}</strong></div>
-          <div class="detail-row"><span>AI Provider</span><strong>{{ response()?.provider || 'Pending' }}</strong></div>
-          <div class="detail-row"><span>Latency</span><strong>{{ response()?.executionTimeMs ? response()?.executionTimeMs + ' ms' : 'Pending' }}</strong></div>
-        </div>
+        <app-ai-recommendation-panel [response]="response()" />
       </div>
 
       <div class="workspace-panel workspace-panel--wide">
-        <h4>Reasoning</h4>
-        <p>{{ response()?.reasoning || 'The reasoning will appear here once the AI response is available.' }}</p>
-      </div>
-
-      <div class="workspace-panel workspace-panel--wide">
-        <h4>Evidence</h4>
-        <ul>
-          @for (item of response()?.evidence || []; track item) {
-            <li>{{ item }}</li>
-          }
-        </ul>
+        <h4>Execution Metadata</h4>
+        <div class="detail-row"><span>Decision Id</span><strong>{{ response()?.decisionId || 'No data available' }}</strong></div>
+        <div class="detail-row"><span>AI Provider</span><strong>{{ response()?.provider || 'No data available' }}</strong></div>
+        <div class="detail-row"><span>Model</span><strong>{{ response()?.model || 'No data available' }}</strong></div>
+        <div class="detail-row"><span>Latency</span><strong>{{ response()?.executionTimeMs ? response()?.executionTimeMs + ' ms' : 'No data available' }}</strong></div>
       </div>
     </section>
   `,
@@ -120,12 +105,6 @@ import { IncidentSummary } from '../../../core/models/incident-summary.model';
     .detail-row strong {
       color: var(--app-text);
       text-align: right;
-    }
-
-    .recommendation-title {
-      color: var(--app-text);
-      font-weight: 700;
-      margin-bottom: 0.6rem;
     }
 
     ul {

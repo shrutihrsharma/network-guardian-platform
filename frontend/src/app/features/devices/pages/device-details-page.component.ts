@@ -114,10 +114,7 @@ export class DeviceDetailsPageComponent {
     { label: 'Incidents', path: 'incidents' },
     { label: 'Lifecycle', path: 'lifecycle' },
     { label: 'Topology', path: 'topology' },
-    { label: 'Compliance', path: 'compliance' },
-    { label: 'Predictive Risk', path: 'predictive-risk' },
-    { label: 'AI Insights', path: 'ai-insights' },
-    { label: 'Decision History', path: 'decision-history' }
+    { label: 'Compliance', path: 'compliance' }
   ];
 
   constructor() {
