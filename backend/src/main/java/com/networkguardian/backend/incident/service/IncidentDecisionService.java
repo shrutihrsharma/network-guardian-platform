@@ -17,6 +17,7 @@ import com.networkguardian.backend.common.dto.AIResponse;
 import com.networkguardian.backend.common.dto.DecisionAudit;
 import com.networkguardian.backend.incident.context.IncidentContext;
 import com.networkguardian.backend.incident.context.IncidentContextBuilder;
+import com.networkguardian.backend.common.service.DecisionEvidenceMapper;
 import com.networkguardian.backend.common.dto.DecisionRecommendation;
 import com.networkguardian.backend.common.dto.DecisionRequest;
 import com.networkguardian.backend.common.dto.DecisionResponse;
@@ -31,19 +32,22 @@ public class IncidentDecisionService implements AIDecisionModule {
     private final AIClient aiClient;
     private final ObjectMapper objectMapper;
     private final DecisionAuditService decisionAuditService;
+    private final DecisionEvidenceMapper decisionEvidenceMapper;
 
     public IncidentDecisionService(
             IncidentContextBuilder incidentContextBuilder,
             PromptBuilder promptBuilder,
             @Qualifier("groqClient") AIClient aiClient,
             ObjectMapper objectMapper,
-            DecisionAuditService decisionAuditService
+            DecisionAuditService decisionAuditService,
+            DecisionEvidenceMapper decisionEvidenceMapper
     ) {
         this.incidentContextBuilder = incidentContextBuilder;
         this.promptBuilder = promptBuilder;
         this.aiClient = aiClient;
         this.objectMapper = objectMapper;
         this.decisionAuditService = decisionAuditService;
+        this.decisionEvidenceMapper = decisionEvidenceMapper;
     }
 
     @Override
@@ -79,7 +83,7 @@ public class IncidentDecisionService implements AIDecisionModule {
                 .reasoning(recommendation.getReasoning())
                 .businessImpact(recommendation.getBusinessImpact())
                 .approvalRequired(recommendation.isApprovalRequired())
-                .evidence(recommendation.getEvidence())
+                .evidence(decisionEvidenceMapper.fromKnowledge(incidentContext.getEnterpriseKnowledge()))
                 .build();
 
                 DecisionAudit audit = DecisionAudit.builder()

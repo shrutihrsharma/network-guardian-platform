@@ -21,16 +21,24 @@ import com.networkguardian.backend.incident.model.Runbook;
 public class PromptBuilder {
 
     private static final String PROMPT_TEMPLATE_PATH = "prompts/incident.md";
+    private final EnterpriseKnowledgeSectionBuilder enterpriseKnowledgeSectionBuilder;
+
+    public PromptBuilder(EnterpriseKnowledgeSectionBuilder enterpriseKnowledgeSectionBuilder) {
+        this.enterpriseKnowledgeSectionBuilder = enterpriseKnowledgeSectionBuilder;
+    }
 
     public String build(IncidentContext context) {
 
         String template = loadTemplate();
 
-        return template
+        String prompt = template
                 .replace("{{device}}", formatDevice(context.getDevice()))
                 .replace("{{incident}}", formatIncident(context.getIncident()))
                 .replace("{{runbook}}", formatRunbook(context.getRunbook()))
                 .replace("{{history}}", formatHistory(context.getHistoricalIncidents()));
+
+        return enterpriseKnowledgeSectionBuilder
+                .appendBeforeFinalInstructions(prompt, context.getEnterpriseKnowledge());
     }
 
     private String loadTemplate() {

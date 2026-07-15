@@ -6,6 +6,7 @@ import java.util.List;
 import com.networkguardian.backend.compliance.dto.ComplianceSummaryResponse;
 import com.networkguardian.backend.compliance.dto.DeviceComplianceResponse;
 import com.networkguardian.backend.compliance.model.ComplianceKri;
+import com.networkguardian.backend.rag.model.KnowledgeDocument;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,5 +28,6 @@ public class ComplianceContext {
     private List<ComplianceKri> activeKris;
     private DeviceComplianceResponse targetDevice;
     private ComplianceKnowledge knowledge;
+    private List<KnowledgeDocument> enterpriseKnowledge;
     private LocalDateTime decisionTimestamp;
 }

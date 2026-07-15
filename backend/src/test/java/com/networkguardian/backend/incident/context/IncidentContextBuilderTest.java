@@ -14,6 +14,7 @@ import com.networkguardian.backend.incident.model.Device;
 import com.networkguardian.backend.incident.model.HistoricalIncident;
 import com.networkguardian.backend.incident.model.Incident;
 import com.networkguardian.backend.incident.model.Runbook;
+import com.networkguardian.backend.rag.service.RAGRetrievalService;
 import com.networkguardian.backend.repository.DeviceRepository;
 import com.networkguardian.backend.repository.HistoricalIncidentRepository;
 import com.networkguardian.backend.repository.IncidentRepository;
@@ -27,6 +28,7 @@ class IncidentContextBuilderTest {
         DeviceRepository deviceRepository = mock(DeviceRepository.class);
         RunbookRepository runbookRepository = mock(RunbookRepository.class);
         HistoricalIncidentRepository historicalIncidentRepository = mock(HistoricalIncidentRepository.class);
+        RAGRetrievalService ragRetrievalService = mock(RAGRetrievalService.class);
 
         when(incidentRepository.findById("INC-1001")).thenReturn(Optional.of(Incident.builder()
                 .id("INC-1001")
@@ -70,7 +72,8 @@ class IncidentContextBuilderTest {
                 incidentRepository,
                 deviceRepository,
                 runbookRepository,
-                historicalIncidentRepository
+                historicalIncidentRepository,
+                ragRetrievalService
         );
 
         IncidentContext context = builder.build("INC-1001");

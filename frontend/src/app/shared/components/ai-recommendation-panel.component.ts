@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { DecisionResponse } from '../../core/models/decision-response.model';
+import { AIEvidencePanelComponent } from './ai-evidence-panel.component';
 
 @Component({
   selector: 'app-ai-recommendation-panel',
   standalone: true,
-  imports: [DecimalPipe],
+  imports: [DecimalPipe, AIEvidencePanelComponent],
   template: `
     <section class="ai-rec-panel">
       @if (response(); as r) {
@@ -22,6 +23,10 @@ import { DecisionResponse } from '../../core/models/decision-response.model';
           <div class="cell">
             <span>Confidence</span>
             <strong>{{ r.confidence | number:'1.0-0' }}%</strong>
+            <p class="confidence-note">
+              Recommendation generated using enterprise knowledge from {{ r.evidence.length }}
+              {{ r.evidence.length === 1 ? 'source' : 'sources' }}.
+            </p>
           </div>
           <div class="cell">
             <span>Business Impact</span>
@@ -29,18 +34,7 @@ import { DecisionResponse } from '../../core/models/decision-response.model';
           </div>
         </div>
 
-        <div class="row">
-          <span>Evidence</span>
-          @if (r.evidence.length) {
-            <ul>
-              @for (item of r.evidence; track item) {
-                <li>{{ item }}</li>
-              }
-            </ul>
-          } @else {
-            <p>No data available</p>
-          }
-        </div>
+        <app-ai-evidence-panel [items]="r.evidence" />
 
         <div class="row">
           <span>Suggested Actions</span>
@@ -96,6 +90,13 @@ import { DecisionResponse } from '../../core/models/decision-response.model';
       color: var(--app-text-secondary);
       font-size: 0.82rem;
       line-height: 1.45;
+    }
+
+    .confidence-note {
+      margin: 0.15rem 0 0;
+      color: var(--app-text-muted);
+      font-size: 0.7rem;
+      line-height: 1.35;
     }
 
     .grid {

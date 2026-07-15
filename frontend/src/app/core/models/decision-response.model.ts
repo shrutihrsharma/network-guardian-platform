@@ -1,3 +1,11 @@
+export interface DecisionEvidenceItem {
+  title: string;
+  category: string;
+  source: string;
+  summary: string;
+  referenceUrl?: string;
+}
+
 export interface DecisionResponse {
   decisionId: string;
   engine: string;
@@ -7,7 +15,7 @@ export interface DecisionResponse {
   reasoning: string;
   businessImpact: string;
   approvalRequired: boolean;
-  evidence: string[];
+  evidence: DecisionEvidenceItem[];
   provider: string;
   model: string;
   executionTimeMs: number;

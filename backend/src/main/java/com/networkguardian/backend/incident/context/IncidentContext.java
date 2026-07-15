@@ -7,6 +7,7 @@ import com.networkguardian.backend.incident.model.Device;
 import com.networkguardian.backend.incident.model.HistoricalIncident;
 import com.networkguardian.backend.incident.model.Incident;
 import com.networkguardian.backend.incident.model.Runbook;
+import com.networkguardian.backend.rag.model.KnowledgeDocument;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,5 +26,6 @@ public class IncidentContext {
     private List<HistoricalIncident> historicalIncidents;
     private String businessService;
     private String lifecycleStatus;
+    private List<KnowledgeDocument> enterpriseKnowledge;
     private LocalDateTime decisionTimestamp;
 }

@@ -11,6 +11,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
+import com.networkguardian.backend.ai.EnterpriseKnowledgeSectionBuilder;
 import com.networkguardian.backend.incident.model.Incident;
 import com.networkguardian.backend.lifecycle.context.LifecycleContext;
 import com.networkguardian.backend.lifecycle.model.SoftwareLifecycle;
@@ -19,15 +20,23 @@ import com.networkguardian.backend.lifecycle.model.SoftwareLifecycle;
 public class LifecyclePromptBuilder {
 
     private static final String TEMPLATE_PATH = "prompts/lifecycle.md";
+    private final EnterpriseKnowledgeSectionBuilder enterpriseKnowledgeSectionBuilder;
+
+    public LifecyclePromptBuilder(EnterpriseKnowledgeSectionBuilder enterpriseKnowledgeSectionBuilder) {
+        this.enterpriseKnowledgeSectionBuilder = enterpriseKnowledgeSectionBuilder;
+    }
 
     public String build(LifecycleContext context) {
         String template = loadTemplate();
 
-        return template
+        String prompt = template
                 .replace("{{device}}", formatDevice(context))
                 .replace("{{lifecycle}}", formatLifecycle(context.getLifecycle()))
                 .replace("{{stageAnalysis}}", formatStageAnalysis(context))
                 .replace("{{incidents}}", formatIncidents(context.getRelatedIncidents()));
+
+        return enterpriseKnowledgeSectionBuilder
+                .appendBeforeFinalInstructions(prompt, context.getEnterpriseKnowledge());
     }
 
     private String loadTemplate() {

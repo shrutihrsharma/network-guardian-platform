@@ -16,6 +16,7 @@ import com.networkguardian.backend.common.dto.AIResponse;
 import com.networkguardian.backend.common.dto.DecisionAudit;
 import com.networkguardian.backend.common.dto.DecisionRequest;
 import com.networkguardian.backend.common.dto.DecisionResponse;
+import com.networkguardian.backend.common.service.DecisionEvidenceMapper;
 import com.networkguardian.backend.lifecycle.context.LifecycleContext;
 import com.networkguardian.backend.lifecycle.context.LifecycleContextBuilder;
 import com.networkguardian.backend.lifecycle.dto.LifecycleDecisionRecommendation;
@@ -32,18 +33,21 @@ public class LifecycleDecisionService implements AIDecisionModule {
     private final AIClient aiClient;
     private final ObjectMapper objectMapper;
     private final DecisionAuditService decisionAuditService;
+    private final DecisionEvidenceMapper decisionEvidenceMapper;
 
     public LifecycleDecisionService(
             LifecycleContextBuilder contextBuilder,
             LifecyclePromptBuilder promptBuilder,
             @Qualifier("groqClient") AIClient aiClient,
             ObjectMapper objectMapper,
-            DecisionAuditService decisionAuditService) {
+            DecisionAuditService decisionAuditService,
+            DecisionEvidenceMapper decisionEvidenceMapper) {
         this.contextBuilder = contextBuilder;
         this.promptBuilder = promptBuilder;
         this.aiClient = aiClient;
         this.objectMapper = objectMapper;
         this.decisionAuditService = decisionAuditService;
+        this.decisionEvidenceMapper = decisionEvidenceMapper;
     }
 
     @Override
@@ -78,7 +82,7 @@ public class LifecycleDecisionService implements AIDecisionModule {
                 .reasoning(rec.getSummary())
                 .businessImpact(rec.getBusinessImpact())
                 .approvalRequired(rec.isApprovalRequired())
-                .evidence(rec.getJustification())
+                .evidence(decisionEvidenceMapper.fromKnowledge(context.getEnterpriseKnowledge()))
                 .risk(rec.getRisk())
                 .summary(rec.getSummary())
                 .recommendedVersion(rec.getRecommendedVersion())

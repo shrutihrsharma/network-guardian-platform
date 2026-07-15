@@ -9,7 +9,10 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import com.networkguardian.backend.compliance.dto.ComplianceDashboardResponse;
 import com.networkguardian.backend.compliance.dto.ComplianceSummaryResponse;
@@ -18,6 +21,9 @@ import com.networkguardian.backend.compliance.model.ComplianceKri;
 import com.networkguardian.backend.compliance.service.ComplianceService;
 import com.networkguardian.backend.incident.model.Device;
 import com.networkguardian.backend.incident.model.Incident;
+import com.networkguardian.backend.rag.dto.KnowledgeQuery;
+import com.networkguardian.backend.rag.model.KnowledgeDocument;
+import com.networkguardian.backend.rag.service.RAGRetrievalService;
 import com.networkguardian.backend.repository.ComplianceKriRepository;
 import com.networkguardian.backend.repository.DeviceRepository;
 import com.networkguardian.backend.repository.IncidentRepository;
@@ -27,12 +33,15 @@ import com.networkguardian.backend.repository.SoftwareLifecycleRepository;
 @SuppressWarnings("null")
 public class ComplianceContextBuilder {
 
+        private static final Logger log = LoggerFactory.getLogger(ComplianceContextBuilder.class);
+
     private final ComplianceService complianceService;
     private final ComplianceKriRepository complianceKriRepository;
     private final DeviceRepository deviceRepository;
     private final IncidentRepository incidentRepository;
     private final SoftwareLifecycleRepository softwareLifecycleRepository;
     private final List<ComplianceKnowledgeProvider> knowledgeProviders;
+        private final RAGRetrievalService ragRetrievalService;
 
     public ComplianceContextBuilder(
             ComplianceService complianceService,
@@ -40,13 +49,15 @@ public class ComplianceContextBuilder {
             DeviceRepository deviceRepository,
             IncidentRepository incidentRepository,
             SoftwareLifecycleRepository softwareLifecycleRepository,
-            List<ComplianceKnowledgeProvider> knowledgeProviders) {
+                        List<ComplianceKnowledgeProvider> knowledgeProviders,
+                        RAGRetrievalService ragRetrievalService) {
         this.complianceService = complianceService;
         this.complianceKriRepository = complianceKriRepository;
         this.deviceRepository = deviceRepository;
         this.incidentRepository = incidentRepository;
         this.softwareLifecycleRepository = softwareLifecycleRepository;
         this.knowledgeProviders = knowledgeProviders;
+                this.ragRetrievalService = ragRetrievalService;
     }
 
     public ComplianceContext build(String deviceId) {
@@ -85,8 +96,10 @@ public class ComplianceContextBuilder {
 
         String lifecycleSummary = buildLifecycleSummary();
         String incidentSummary = buildIncidentSummary(incidentsByDevice);
+        String businessService = resolveBusinessService(targetDevice.orElse(null), devicesById);
 
         ComplianceKnowledge knowledge = resolveKnowledge(targetDevice.orElse(null), devicesById);
+        List<KnowledgeDocument> enterpriseKnowledge = retrieveKnowledge(targetDevice.orElse(null), businessService, dashboard);
 
         return ComplianceContext.builder()
                 .summary(summary)
@@ -102,8 +115,72 @@ public class ComplianceContextBuilder {
                 .activeKris(activeKris)
                 .targetDevice(targetDevice.orElse(null))
                 .knowledge(knowledge)
+                .enterpriseKnowledge(enterpriseKnowledge)
                 .decisionTimestamp(LocalDateTime.now())
                 .build();
+    }
+
+        private String resolveBusinessService(
+                        DeviceComplianceResponse targetDevice,
+                        Map<String, Device> devicesById) {
+                if (targetDevice == null) {
+                        return null;
+                }
+                Device rawDevice = devicesById.get(targetDevice.getDeviceId());
+                return rawDevice != null ? rawDevice.getBusinessService() : null;
+        }
+
+    private List<KnowledgeDocument> retrieveKnowledge(
+            DeviceComplianceResponse targetDevice,
+            String businessService,
+            ComplianceDashboardResponse dashboard) {
+        try {
+            List<String> tags = java.util.stream.Stream.of(
+                            List.of("compliance"),
+                            targetDevice != null && StringUtils.hasText(targetDevice.getLifecycleStage())
+                                    ? List.of(targetDevice.getLifecycleStage())
+                                    : List.<String>of())
+                    .flatMap(List::stream)
+                    .filter(StringUtils::hasText)
+                    .toList();
+
+            List<String> failedKriKeywords = dashboard.getTopFailedKRIs() == null
+                    ? List.of()
+                    : dashboard.getTopFailedKRIs().stream()
+                            .map(item -> item.getKriName())
+                            .filter(StringUtils::hasText)
+                            .toList();
+
+            List<String> keywords = java.util.stream.Stream.of(
+                            failedKriKeywords,
+                            List.of(
+                                    businessService,
+                                    targetDevice != null ? targetDevice.getLifecycleStage() : null,
+                                    targetDevice != null ? targetDevice.getRiskLevel() : null,
+                                    "compliance",
+                                    "policy"))
+                    .flatMap(List::stream)
+                    .filter(Objects::nonNull)
+                    .filter(StringUtils::hasText)
+                    .distinct()
+                    .toList();
+
+            KnowledgeQuery query = KnowledgeQuery.builder()
+                    .vendor(targetDevice != null ? targetDevice.getVendor() : null)
+                    .deviceType(targetDevice != null ? targetDevice.getDeviceType() : null)
+                    .category("Compliance Policy")
+                    .tags(tags)
+                    .keywords(keywords)
+                    .maximumResults(5)
+                    .build();
+
+            List<KnowledgeDocument> documents = ragRetrievalService.retrieve(query);
+            return documents != null ? documents : List.of();
+        } catch (Exception ex) {
+            log.warn("RAG retrieval failed for compliance context. Continuing without enterprise knowledge: {}",
+                    ex.getMessage());
+            return List.of();
+        }
     }
 
     private String buildLifecycleSummary() {

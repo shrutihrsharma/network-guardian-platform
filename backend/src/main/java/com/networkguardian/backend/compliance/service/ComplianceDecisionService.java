@@ -23,6 +23,7 @@ import com.networkguardian.backend.common.dto.AIResponse;
 import com.networkguardian.backend.common.dto.DecisionAudit;
 import com.networkguardian.backend.common.dto.DecisionRequest;
 import com.networkguardian.backend.common.dto.DecisionResponse;
+import com.networkguardian.backend.common.service.DecisionEvidenceMapper;
 import com.networkguardian.backend.compliance.context.ComplianceContext;
 import com.networkguardian.backend.compliance.context.ComplianceContextBuilder;
 import com.networkguardian.backend.compliance.dto.ComplianceDecisionRecommendation;
@@ -47,6 +48,7 @@ public class ComplianceDecisionService implements AIDecisionModule {
     private final AIClient aiClient;
     private final ObjectMapper objectMapper;
     private final DecisionAuditService decisionAuditService;
+    private final DecisionEvidenceMapper decisionEvidenceMapper;
 
     public ComplianceDecisionService(
             ComplianceContextBuilder contextBuilder,
@@ -55,7 +57,8 @@ public class ComplianceDecisionService implements AIDecisionModule {
             ComplianceKriRepository complianceKriRepository,
             @Qualifier("groqClient") AIClient aiClient,
             ObjectMapper objectMapper,
-            DecisionAuditService decisionAuditService) {
+            DecisionAuditService decisionAuditService,
+            DecisionEvidenceMapper decisionEvidenceMapper) {
         this.contextBuilder = contextBuilder;
         this.compliancePromptBuilder = compliancePromptBuilder;
         this.complianceKriPromptBuilder = complianceKriPromptBuilder;
@@ -63,6 +66,7 @@ public class ComplianceDecisionService implements AIDecisionModule {
         this.aiClient = aiClient;
         this.objectMapper = objectMapper;
         this.decisionAuditService = decisionAuditService;
+          this.decisionEvidenceMapper = decisionEvidenceMapper;
     }
 
     @Override
@@ -93,7 +97,7 @@ public class ComplianceDecisionService implements AIDecisionModule {
                 .reasoning(String.join(" | ", safeList(recommendation.getRemediationPlan())))
                 .businessImpact(recommendation.getBusinessImpact())
                 .approvalRequired(true)
-                .evidence(safeList(recommendation.getEvidence()))
+                .evidence(decisionEvidenceMapper.fromKnowledge(context.getEnterpriseKnowledge()))
                 .risk(recommendation.getRisk())
                 .summary("Priority=%s".formatted(recommendation.getPriority()))
                 .provider(aiResponse.getProvider())
@@ -167,7 +171,10 @@ public class ComplianceDecisionService implements AIDecisionModule {
                 .reasoning("AI proposed new KRIs based on compliance posture, lifecycle, incidents, and knowledge inputs.")
                 .businessImpact("Medium")
                 .approvalRequired(true)
-                .evidence(List.of("Compliance context", "Lifecycle summary", "Incident summary"))
+                .evidence(decisionEvidenceMapper.fromTextEvidence(
+                  "Operational Context",
+                  "Compliance Engine",
+                  List.of("Compliance context", "Lifecycle summary", "Incident summary")))
                 .provider(aiResponse.getProvider())
                 .model(aiResponse.getModel())
                 .executionTimeMs(aiResponse.getResponseTimeMs())
@@ -202,7 +209,10 @@ public class ComplianceDecisionService implements AIDecisionModule {
                 .reasoning("Compliance KRI has been approved for use in deterministic compliance calculations.")
                 .businessImpact("Low")
                 .approvalRequired(false)
-                .evidence(List.of("KRI approval workflow"))
+                .evidence(decisionEvidenceMapper.fromTextEvidence(
+                  "Operational Context",
+                  "Compliance Approval Workflow",
+                  List.of("KRI approval workflow")))
                 .build();
 
         AIResponse synthetic = AIResponse.builder()
@@ -314,7 +324,7 @@ public class ComplianceDecisionService implements AIDecisionModule {
                   ],
                   "priority": "P1",
                   "suggestedKRIs": [
-                    "Unsupported Software %",
+                    "Unsupported Software %%",
                     "Certificate Expiry",
                     "Configuration Drift"
                   ]

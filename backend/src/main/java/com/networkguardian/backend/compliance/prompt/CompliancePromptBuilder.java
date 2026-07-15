@@ -11,6 +11,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
+import com.networkguardian.backend.ai.EnterpriseKnowledgeSectionBuilder;
 import com.networkguardian.backend.compliance.context.ComplianceContext;
 import com.networkguardian.backend.compliance.dto.DeviceComplianceResponse;
 
@@ -18,11 +19,16 @@ import com.networkguardian.backend.compliance.dto.DeviceComplianceResponse;
 public class CompliancePromptBuilder {
 
     private static final String TEMPLATE_PATH = "prompts/compliance_decision.md";
+    private final EnterpriseKnowledgeSectionBuilder enterpriseKnowledgeSectionBuilder;
+
+    public CompliancePromptBuilder(EnterpriseKnowledgeSectionBuilder enterpriseKnowledgeSectionBuilder) {
+        this.enterpriseKnowledgeSectionBuilder = enterpriseKnowledgeSectionBuilder;
+    }
 
     public String build(ComplianceContext context) {
         String template = loadTemplate();
 
-        return template
+        String prompt = template
                 .replace("{{summary}}", formatSummary(context))
                 .replace("{{currentCompliance}}", formatCurrentCompliance(context))
                 .replace("{{failedKris}}", formatList(context.getTopFailedKris()))
@@ -36,6 +42,9 @@ public class CompliancePromptBuilder {
                 .replace("{{historicalRca}}", formatList(context.getKnowledge().getHistoricalRca()))
                 .replace("{{activeKris}}", formatActiveKris(context))
                 .replace("{{timestamp}}", Objects.toString(context.getDecisionTimestamp(), "N/A"));
+
+            return enterpriseKnowledgeSectionBuilder
+                .appendBeforeFinalInstructions(prompt, context.getEnterpriseKnowledge());
     }
 
     private String loadTemplate() {

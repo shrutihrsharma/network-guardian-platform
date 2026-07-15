@@ -21,7 +21,7 @@ public class DecisionResponse {
     private String reasoning;
     private String businessImpact;
     private boolean approvalRequired;
-    private List<String> evidence;
+    private List<DecisionEvidenceItem> evidence;
     private String provider;
     private String model;
     private long executionTimeMs;
