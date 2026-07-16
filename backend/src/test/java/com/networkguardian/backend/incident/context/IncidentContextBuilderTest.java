@@ -15,6 +15,7 @@ import com.networkguardian.backend.incident.model.HistoricalIncident;
 import com.networkguardian.backend.incident.model.Incident;
 import com.networkguardian.backend.incident.model.Runbook;
 import com.networkguardian.backend.incident.rag.IncidentRAGService;
+import com.networkguardian.backend.knowledge.KnowledgeRAGService;
 import com.networkguardian.backend.repository.DeviceRepository;
 import com.networkguardian.backend.repository.HistoricalIncidentRepository;
 import com.networkguardian.backend.repository.IncidentRepository;
@@ -68,12 +69,16 @@ class IncidentContextBuilderTest {
                 .resolutionConfidence(94.5)
                 .build()));
 
+        KnowledgeRAGService knowledgeRAGService = mock(KnowledgeRAGService.class);
+        when(knowledgeRAGService.findRelevant(org.mockito.ArgumentMatchers.anyString())).thenReturn(List.of());
+
         IncidentContextBuilder builder = new IncidentContextBuilder(
                 incidentRepository,
                 deviceRepository,
                 runbookRepository,
                 historicalIncidentRepository,
-                ragService
+                ragService,
+                knowledgeRAGService
         );
 
         IncidentContext context = builder.build("INC-1001");

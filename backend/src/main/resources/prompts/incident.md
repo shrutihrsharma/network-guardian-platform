@@ -18,6 +18,10 @@ HISTORICAL INCIDENTS
 ====================
 {{history}}
 ====================
+KNOWLEDGE BASE
+====================
+{{knowledge}}
+====================
 TASK
 ====================
 Determine:

@@ -151,6 +151,7 @@ export class SideNavComponent {
     { label: 'Compliance', icon: 'verified_user', route: '/compliance', enabled: true },
     { label: 'Predictive Risk', icon: 'analytics', route: '/predictive-risk', enabled: true },
     { label: 'Decision History', icon: 'history', route: '/decision-history', enabled: true },
+    { label: 'Knowledge Base', icon: 'library_books', route: '/knowledge', enabled: true },
     { label: 'Settings', icon: 'settings', route: '/settings', enabled: true }
   ];
 }

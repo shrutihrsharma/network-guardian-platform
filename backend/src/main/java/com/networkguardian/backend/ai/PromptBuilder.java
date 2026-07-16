@@ -16,6 +16,7 @@ import com.networkguardian.backend.incident.model.Device;
 import com.networkguardian.backend.incident.model.HistoricalIncident;
 import com.networkguardian.backend.incident.model.Incident;
 import com.networkguardian.backend.incident.model.Runbook;
+import com.networkguardian.backend.knowledge.KnowledgeChunk;
 
 @Component
 public class PromptBuilder {
@@ -30,7 +31,8 @@ public class PromptBuilder {
                 .replace("{{device}}", formatDevice(context.getDevice()))
                 .replace("{{incident}}", formatIncident(context.getIncident()))
                 .replace("{{runbook}}", formatRunbook(context.getRunbook()))
-                .replace("{{history}}", formatHistory(context.getHistoricalIncidents()));
+                .replace("{{history}}", formatHistory(context.getHistoricalIncidents()))
+                .replace("{{knowledge}}", formatKnowledge(context.getKnowledgeChunks()));
     }
 
     private String loadTemplate() {
@@ -112,5 +114,14 @@ public class PromptBuilder {
                                 h.getResolutionConfidence()
                         ))
                 .collect(Collectors.joining("\n"));
+    }
+
+    private String formatKnowledge(List<KnowledgeChunk> chunks) {
+        if (chunks == null || chunks.isEmpty()) {
+            return "No relevant knowledge base documents found.";
+        }
+        return chunks.stream()
+                .map(c -> "[%s | %s]\n%s".formatted(c.getSourceFile(), c.getSourceType(), c.getContent()))
+                .collect(Collectors.joining("\n\n"));
     }
 }

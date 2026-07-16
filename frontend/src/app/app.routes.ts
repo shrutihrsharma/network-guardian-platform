@@ -62,5 +62,9 @@ export const routes: Routes = [
     path: 'incident',
     loadComponent: () => import('./features/incident/pages/incident-page.component').then((m) => m.IncidentPageComponent)
   },
+  {
+    path: 'knowledge',
+    loadComponent: () => import('./features/knowledge/pages/knowledge-page.component').then((m) => m.KnowledgePageComponent)
+  },
   { path: '**', redirectTo: '/devices' }
 ];

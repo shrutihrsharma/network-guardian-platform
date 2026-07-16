@@ -14,6 +14,7 @@ import com.networkguardian.backend.incident.model.HistoricalIncident;
 import com.networkguardian.backend.incident.model.Incident;
 import com.networkguardian.backend.incident.model.Runbook;
 import com.networkguardian.backend.incident.rag.IncidentRAGService;
+import com.networkguardian.backend.knowledge.KnowledgeRAGService;
 import com.networkguardian.backend.repository.DeviceRepository;
 import com.networkguardian.backend.repository.HistoricalIncidentRepository;
 import com.networkguardian.backend.repository.IncidentRepository;
@@ -30,18 +31,21 @@ public class IncidentContextBuilder {
     private final RunbookRepository runbookRepository;
     private final HistoricalIncidentRepository historicalIncidentRepository;
     private final IncidentRAGService ragService;
+    private final KnowledgeRAGService knowledgeRAGService;
 
     public IncidentContextBuilder(
             IncidentRepository incidentRepository,
             DeviceRepository deviceRepository,
             RunbookRepository runbookRepository,
             HistoricalIncidentRepository historicalIncidentRepository,
-            IncidentRAGService ragService) {
+            IncidentRAGService ragService,
+            KnowledgeRAGService knowledgeRAGService) {
         this.incidentRepository = incidentRepository;
         this.deviceRepository = deviceRepository;
         this.runbookRepository = runbookRepository;
         this.historicalIncidentRepository = historicalIncidentRepository;
         this.ragService = ragService;
+        this.knowledgeRAGService = knowledgeRAGService;
     }
 
     public IncidentContext build(String incidentId) {
@@ -62,11 +66,16 @@ public class IncidentContextBuilder {
         List<HistoricalIncident> historicalIncidents = ragService.findSimilar(incident.getSymptoms());
         log.info("RAG: retrieved {} similar historical incidents", historicalIncidents.size());
 
+        String knowledgeQuery = String.join(", ", incident.getSymptoms());
+        var knowledgeChunks = knowledgeRAGService.findRelevant(knowledgeQuery);
+        log.info("Knowledge RAG: retrieved {} chunks", knowledgeChunks.size());
+
         return IncidentContext.builder()
                 .device(device)
                 .incident(incident)
                 .runbook(runbook)
                 .historicalIncidents(historicalIncidents)
+                .knowledgeChunks(knowledgeChunks)
                 .businessService(device.getBusinessService())
                 .lifecycleStatus(device.getLifecycleStatus())
                 .decisionTimestamp(LocalDateTime.now())
