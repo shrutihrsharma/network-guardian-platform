@@ -6,13 +6,12 @@ import {
 } from '@angular/core';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
 import { DeviceLifecycleSummary, STAGE_CONFIG, LifecycleStage } from '../../../core/models/lifecycle.model';
 
 @Component({
   selector: 'app-lifecycle-table',
   standalone: true,
-  imports: [MatTableModule, MatIconModule, MatButtonModule],
+  imports: [MatTableModule, MatIconModule],
   template: `
     <div class="table-wrap">
       <table mat-table [dataSource]="devices()" class="lc-table">
@@ -71,15 +70,6 @@ import { DeviceLifecycleSummary, STAGE_CONFIG, LifecycleStage } from '../../../c
           </td>
         </ng-container>
 
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef>Actions</th>
-          <td mat-cell *matCellDef="let row">
-            <button mat-icon-button class="action-btn" (click)="onAnalyzeClick(row)" title="Analyse lifecycle">
-              <mat-icon>psychology</mat-icon>
-            </button>
-          </td>
-        </ng-container>
-
         <tr mat-header-row *matHeaderRowDef="columns"></tr>
         <tr mat-row *matRowDef="let row; columns: columns"
           class="data-row"
@@ -98,7 +88,7 @@ import { DeviceLifecycleSummary, STAGE_CONFIG, LifecycleStage } from '../../../c
   `,
   styles: `
     .table-wrap {
-      border: 1px solid var(--app-card-border);
+      border: 1px solid var(--app-border);
       border-radius: var(--app-radius);
       background: var(--app-card-bg);
       max-height: 42rem;
@@ -140,7 +130,7 @@ import { DeviceLifecycleSummary, STAGE_CONFIG, LifecycleStage } from '../../../c
 
     .mat-mdc-cell {
       border-bottom-color: var(--app-border) !important;
-      padding: 0.65rem 0.75rem !important;
+      padding: 0.55rem 0.75rem !important;
     }
 
     .data-row {
@@ -153,7 +143,8 @@ import { DeviceLifecycleSummary, STAGE_CONFIG, LifecycleStage } from '../../../c
     }
 
     .data-row.selected {
-      background: var(--app-primary-soft) !important;
+      background: rgba(245, 158, 11, 0.12) !important;
+      box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.3);
     }
 
     .cell-primary {
@@ -218,12 +209,6 @@ import { DeviceLifecycleSummary, STAGE_CONFIG, LifecycleStage } from '../../../c
     .days-warning  { color: var(--app-warning); font-weight: 600; }
     .days-ok       { color: var(--app-text-secondary); }
 
-    .action-btn {
-      color: var(--app-primary);
-      width: 2rem;
-      height: 2rem;
-    }
-
     .empty-state {
       display: flex;
       flex-direction: column;
@@ -252,9 +237,8 @@ export class LifecycleTableComponent {
   readonly devices = input.required<DeviceLifecycleSummary[]>();
   readonly selectedDevice = input<DeviceLifecycleSummary | null>(null);
   readonly deviceSelected = output<DeviceLifecycleSummary>();
-  readonly analyzeRequested = output<DeviceLifecycleSummary>();
 
-  readonly columns = ['hostname', 'region', 'osVersion', 'lifecycleStage', 'daysUntilUnsupported', 'criticality', 'actions'];
+  readonly columns = ['hostname', 'region', 'osVersion', 'lifecycleStage', 'daysUntilUnsupported', 'criticality'];
 
   stageConf(stage: string) {
     return STAGE_CONFIG[stage as LifecycleStage] ?? STAGE_CONFIG['Maintain'];
@@ -264,10 +248,5 @@ export class LifecycleTableComponent {
     if (days < 0 || days <= 90) return 'days-critical';
     if (days <= 365) return 'days-warning';
     return 'days-ok';
-  }
-
-  onAnalyzeClick(device: DeviceLifecycleSummary): void {
-    this.deviceSelected.emit(device);
-    this.analyzeRequested.emit(device);
   }
 }
