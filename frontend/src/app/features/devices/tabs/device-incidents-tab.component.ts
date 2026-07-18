@@ -25,9 +25,13 @@ import { AiRecommendationPanelComponent } from '../../../shared/components/ai-re
 
           @if (isLoadingIncidents()) {
             <p>Loading open incidents for {{ currentDevice.hostname }}...</p>
-          } @else if (openIncidents().length) {
+          } @else if (displayedIncidents().length) {
+            @if (!openIncidents().length && allIncidents().length) {
+              <p>No open incidents found. Showing recent incident history for {{ currentDevice.hostname }}.</p>
+            }
+
             <app-incident-queue
-              [incidents]="openIncidents()"
+              [incidents]="displayedIncidents()"
               [selectedIncident]="selectedIncident()"
               [aiStatuses]="aiStatuses()"
               [affectedDeviceCounts]="affectedDeviceCounts()"
@@ -149,6 +153,14 @@ export class DeviceIncidentsTabComponent {
     });
   });
 
+  protected readonly displayedIncidents = computed(() => {
+    const open = this.openIncidents();
+    if (open.length) {
+      return open;
+    }
+    return this.allIncidents();
+  });
+
   constructor() {
     effect(() => {
       const currentDevice = this.device();
@@ -214,7 +226,7 @@ export class DeviceIncidentsTabComponent {
     const counts: Record<string, number> = {};
     const statuses: Record<string, string> = {};
 
-    this.openIncidents().forEach((incident) => {
+    this.displayedIncidents().forEach((incident) => {
       counts[incident.id] = this.seedAffectedCount(incident);
       statuses[incident.id] = this.aiStatuses()[incident.id] || 'Pending';
     });
