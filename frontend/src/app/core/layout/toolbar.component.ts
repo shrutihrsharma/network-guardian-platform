@@ -14,7 +14,7 @@ import { MatButtonModule } from '@angular/material/button';
           <mat-icon>hub</mat-icon>
         </div>
         <div>
-          <div class="toolbar__title">Network Guardian</div>
+          <div class="toolbar__title">Sentinel Compliance AI</div>
           <div class="toolbar__subtitle">PLATFORM · V2.0</div>
         </div>
       </div>
