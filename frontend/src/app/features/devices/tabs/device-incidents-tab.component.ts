@@ -147,13 +147,18 @@ export class DeviceIncidentsTabComponent {
       return [];
     }
 
-    const hostname = this.normalize(currentDevice.hostname);
-    const deviceName = this.normalize(currentDevice.deviceName);
+    const deviceCandidates = [
+      this.normalize(currentDevice.hostname),
+      this.normalize(currentDevice.deviceName),
+      this.normalize(currentDevice.id)
+    ].filter((value) => value.length > 0);
 
     return this.allIncidents().filter((incident) => {
       const incidentDevice = this.normalize(incident.device);
       const status = this.normalize(incident.status);
-      const isSameDevice = incidentDevice === hostname || incidentDevice === deviceName;
+      const isSameDevice = deviceCandidates.some((candidate) =>
+        incidentDevice === candidate || incidentDevice.includes(candidate) || candidate.includes(incidentDevice)
+      );
       const isOpen = status !== 'resolved' && status !== 'closed';
       return isSameDevice && isOpen;
     });
@@ -248,6 +253,9 @@ export class DeviceIncidentsTabComponent {
   }
 
   private normalize(value: string | null | undefined): string {
-    return (value || '').trim().toLowerCase();
+    return (value || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '');
   }
 }
