@@ -142,25 +142,10 @@ export class DeviceIncidentsTabComponent {
   protected readonly device = computed(() => this.contextStore.device());
 
   protected readonly openIncidents = computed(() => {
-    const currentDevice = this.device();
-    if (!currentDevice) {
-      return [];
-    }
-
-    const deviceCandidates = [
-      this.normalize(currentDevice.hostname),
-      this.normalize(currentDevice.deviceName),
-      this.normalize(currentDevice.id)
-    ].filter((value) => value.length > 0);
-
     return this.allIncidents().filter((incident) => {
-      const incidentDevice = this.normalize(incident.device);
       const status = this.normalize(incident.status);
-      const isSameDevice = deviceCandidates.some((candidate) =>
-        incidentDevice === candidate || incidentDevice.includes(candidate) || candidate.includes(incidentDevice)
-      );
       const isOpen = status !== 'resolved' && status !== 'closed';
-      return isSameDevice && isOpen;
+      return isOpen;
     });
   });
 
@@ -174,7 +159,7 @@ export class DeviceIncidentsTabComponent {
         return;
       }
 
-      this.fetchIncidents();
+      this.fetchIncidents(currentDevice.id);
     });
   }
 
@@ -208,11 +193,11 @@ export class DeviceIncidentsTabComponent {
     return reasoning.split(/[.|\n]/).map((line) => line.trim()).find((line) => line.length > 0) || 'No data available';
   }
 
-  private fetchIncidents(): void {
+  private fetchIncidents(deviceId: string): void {
     this.isLoadingIncidents.set(true);
     this.loadError.set(null);
 
-    this.decisionApi.getIncidents().subscribe({
+    this.decisionApi.getIncidentsByDevice(deviceId).subscribe({
       next: (incidents) => {
         this.allIncidents.set(incidents);
         this.isLoadingIncidents.set(false);

@@ -20,6 +20,12 @@ export class DecisionApiService {
     );
   }
 
+  getIncidentsByDevice(deviceId: string) {
+    return this.http.get<IncidentSummary[]>(`${environment.apiBaseUrl}/devices/${deviceId}/incidents`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
   executeDecision(request: DecisionRequest) {
     return this.http.post<DecisionResponse>(`${this.baseUrl}/execute`, request).pipe(
       catchError(this.handleError)

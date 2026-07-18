@@ -1,6 +1,8 @@
 package com.networkguardian.backend.device.controller;
 
 import java.util.Comparator;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -12,8 +14,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.networkguardian.backend.device.dto.DeviceResponse;
+import com.networkguardian.backend.incident.dto.IncidentSummaryResponse;
 import com.networkguardian.backend.incident.model.Device;
+import com.networkguardian.backend.incident.model.Incident;
 import com.networkguardian.backend.repository.DeviceRepository;
+import com.networkguardian.backend.repository.IncidentRepository;
 
 @RestController
 @RequestMapping("/api/devices")
@@ -21,9 +26,11 @@ import com.networkguardian.backend.repository.DeviceRepository;
 public class DeviceController {
 
     private final DeviceRepository deviceRepository;
+    private final IncidentRepository incidentRepository;
 
-    public DeviceController(DeviceRepository deviceRepository) {
+    public DeviceController(DeviceRepository deviceRepository, IncidentRepository incidentRepository) {
         this.deviceRepository = deviceRepository;
+        this.incidentRepository = incidentRepository;
     }
 
     @GetMapping
@@ -44,6 +51,22 @@ public class DeviceController {
             .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/{deviceId}/incidents")
+    public ResponseEntity<List<IncidentSummaryResponse>> getDeviceIncidents(@PathVariable String deviceId) {
+        String normalizedDeviceId = Objects.requireNonNull(deviceId);
+
+        return deviceRepository.findById(normalizedDeviceId)
+            .map(device -> {
+                List<IncidentSummaryResponse> incidents = incidentRepository.findByDeviceId(normalizedDeviceId).stream()
+                    .sorted((left, right) -> right.getCreatedAt().compareTo(left.getCreatedAt()))
+                    .map(incident -> toIncidentSummary(incident, device))
+                    .toList();
+
+                return ResponseEntity.ok(incidents);
+            })
+            .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     private DeviceResponse toResponse(Device device) {
         return DeviceResponse.builder()
             .id(device.getId())
@@ -60,6 +83,18 @@ public class DeviceController {
             .healthStatus(deriveHealthStatus(device.getLifecycleStatus()))
             .criticality(deriveCriticality(device.getBusinessService()))
             .osVersion(device.getOsVersion())
+            .build();
+    }
+
+    private IncidentSummaryResponse toIncidentSummary(Incident incident, Device device) {
+        return IncidentSummaryResponse.builder()
+            .id(incident.getId())
+            .severity(incident.getSeverity())
+            .device(device.getHostname())
+            .businessService(device.getBusinessService())
+            .vendor(device.getVendor())
+            .status(incident.getStatus())
+            .createdAt(OffsetDateTime.of(incident.getCreatedAt(), ZoneOffset.UTC).toString())
             .build();
     }
 
