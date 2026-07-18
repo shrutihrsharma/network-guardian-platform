@@ -9,28 +9,31 @@ import { IncidentSummary } from '../../../core/models/incident-summary.model';
       <div class="queue-card__header">
         <div>
           <h3>Operational Incidents</h3>
-          <p>Choose an incident to guide the AI-assisted remediation workflow.</p>
         </div>
       </div>
 
       <div class="queue-table">
         <div class="queue-table__row queue-table__row--head">
-          <span>Incident</span>
+          <span>Incident ID</span>
           <span>Severity</span>
-          <span>Device</span>
-          <span>Business Service</span>
-          <span>Created</span>
           <span>Status</span>
+          <span>Business Service</span>
+          <span>Primary Device</span>
+          <span>Created</span>
+          <span>Affected Devices</span>
+          <span>AI Status</span>
           <span>Action</span>
         </div>
         @for (incident of incidents(); track incident.id) {
           <div class="queue-table__row" [class.is-selected]="selectedIncident()?.id === incident.id" [class.is-disabled]="disabled()">
             <span>{{ incident.id }}</span>
-            <span>{{ incident.severity }}</span>
-            <span>{{ incident.device }}</span>
-            <span>{{ incident.businessService || 'Pending' }}</span>
+            <span [class.is-critical]="incident.severity.toLowerCase() === 'critical'">{{ incident.severity || 'Unknown' }}</span>
+            <span>{{ incident.status || 'Unknown' }}</span>
+            <span>{{ incident.businessService || 'No data available' }}</span>
+            <span>{{ incident.device || 'No data available' }}</span>
             <span>{{ incident.createdAt }}</span>
-            <span>{{ incident.status }}</span>
+            <span>{{ affectedDeviceCounts()[incident.id] || 0 }}</span>
+            <span>{{ aiStatuses()[incident.id] || 'Pending' }}</span>
             <button type="button" (click)="incidentSelected.emit(incident)" [disabled]="disabled()">Analyze</button>
           </div>
         }
@@ -66,21 +69,22 @@ import { IncidentSummary } from '../../../core/models/incident-summary.model';
 
     .queue-table__row {
       display: grid;
-      grid-template-columns: 1.1fr 0.7fr 0.8fr 1fr 0.8fr 0.8fr 0.65fr;
-      gap: 0.7rem;
+      grid-template-columns: minmax(112px, 1fr) 88px 92px minmax(144px, 1.1fr) minmax(140px, 1fr) 132px 132px 100px 96px;
+      gap: 0.65rem;
       align-items: center;
       padding: 0.75rem 0.8rem;
       border: 1px solid var(--app-border);
       border-radius: 0.8rem;
-      background: rgba(255,255,255,0.02);
-      color: #e0e7ff;
+      background: var(--app-surface-mid);
+      color: var(--app-text);
+      font-size: 0.86rem;
     }
 
     .queue-table__row--head {
       font-size: 0.78rem;
       text-transform: uppercase;
       letter-spacing: 0.04em;
-      color: #a5b4fc;
+      color: var(--app-text-muted);
       border: 0;
       background: transparent;
       padding: 0 0.2rem;
@@ -88,7 +92,7 @@ import { IncidentSummary } from '../../../core/models/incident-summary.model';
 
     .queue-table__row.is-selected {
       border-color: var(--app-primary);
-      box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.24);
+      box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.22);
     }
 
     .queue-table__row.is-disabled {
@@ -100,8 +104,24 @@ import { IncidentSummary } from '../../../core/models/incident-summary.model';
       border-radius: 999px;
       padding: 0.4rem 0.75rem;
       background: var(--app-primary);
-      color: white;
+      color: #111827;
+      font-weight: 700;
       cursor: pointer;
+    }
+
+    .is-critical {
+      color: var(--app-danger);
+      font-weight: 700;
+    }
+
+    @media (max-width: 1200px) {
+      .queue-table {
+        overflow-x: auto;
+      }
+
+      .queue-table__row {
+        min-width: 1100px;
+      }
     }
 
     .queue-table__row button:disabled {
@@ -114,6 +134,8 @@ import { IncidentSummary } from '../../../core/models/incident-summary.model';
 export class IncidentQueueComponent {
   readonly incidents = input.required<IncidentSummary[]>();
   readonly selectedIncident = input<IncidentSummary | null>(null);
+  readonly aiStatuses = input<Record<string, string>>({});
+  readonly affectedDeviceCounts = input<Record<string, number>>({});
   readonly disabled = input(false);
   readonly incidentSelected = output<IncidentSummary>();
 }

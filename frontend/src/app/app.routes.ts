@@ -12,16 +12,7 @@ export const routes: Routes = [
   },
   {
     path: 'incidents',
-    loadComponent: () =>
-      import('./features/platform/pages/module-placeholder-page.component').then((m) => m.ModulePlaceholderPageComponent),
-    data: {
-      title: 'Incidents',
-      breadcrumb: 'Incidents',
-      description: 'Incident operations across the enterprise device fleet, with AI-driven analysis and action pathways.',
-      widgets: ['Open Incidents', 'Mean Time To Resolve', 'Escalation Queue', 'AI Triage Readiness'],
-      actionLabel: 'Open Incident AI Workflow',
-      actionRoute: '/incident'
-    }
+    loadComponent: () => import('./features/incident/pages/incident-page.component').then((m) => m.IncidentPageComponent)
   },
   {
     path: 'lifecycle',
@@ -42,7 +33,8 @@ export const routes: Routes = [
   },
   {
     path: 'incident',
-    loadComponent: () => import('./features/incident/pages/incident-page.component').then((m) => m.IncidentPageComponent)
+    redirectTo: '/incidents',
+    pathMatch: 'full'
   },
   { path: '**', redirectTo: '/devices' }
 ];
