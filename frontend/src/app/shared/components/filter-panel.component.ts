@@ -29,7 +29,7 @@ export interface FilterPanelState {
     MatIconModule
   ],
   template: `
-    <section class="filter-panel">
+    <section class="filter-panel" [class.filter-panel--compact]="compact()">
       <mat-form-field appearance="outline" class="search-field">
         <mat-label>Search hostname or device name</mat-label>
         <input
@@ -67,8 +67,8 @@ export interface FilterPanelState {
     .filter-panel {
       display: flex;
       flex-direction: column;
-      gap: 1rem;
-      padding: 1rem;
+      gap: 0.75rem;
+      padding: 0.9rem;
       border: 1px solid var(--app-border);
       border-radius: 1rem;
       background: var(--app-surface);
@@ -81,12 +81,48 @@ export interface FilterPanelState {
     .filter-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 0.8rem;
+      gap: 0.7rem;
     }
 
     .filter-actions {
       display: flex;
       justify-content: flex-end;
+    }
+
+    .filter-panel--compact {
+      gap: 0.5rem;
+      padding: 0.65rem 0.75rem;
+      border-radius: 0.75rem;
+    }
+
+    .filter-panel--compact .filter-grid {
+      gap: 0.55rem;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    .filter-panel--compact .filter-actions {
+      margin-top: 0.1rem;
+    }
+
+    .filter-panel--compact :is(.mat-mdc-form-field-subscript-wrapper, .mdc-notched-outline__notch) {
+      display: none;
+    }
+
+    .filter-panel--compact .mat-mdc-form-field {
+      --mat-form-field-container-height: 42px;
+      --mat-form-field-container-vertical-padding: 8px;
+      font-size: 0.83rem;
+    }
+
+    .filter-panel--compact .mat-mdc-text-field-wrapper {
+      background: rgba(15, 23, 42, 0.45);
+    }
+
+    .filter-panel--compact .mat-mdc-stroked-button {
+      min-height: 34px;
+      padding: 0 0.75rem;
+      font-size: 0.78rem;
+      letter-spacing: 0.02em;
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -94,6 +130,7 @@ export interface FilterPanelState {
 export class FilterPanelComponent {
   readonly fields = input.required<FilterFieldDefinition[]>();
   readonly state = input.required<FilterPanelState>();
+  readonly compact = input(false);
 
   readonly stateChange = output<FilterPanelState>();
   readonly resetClicked = output<void>();
