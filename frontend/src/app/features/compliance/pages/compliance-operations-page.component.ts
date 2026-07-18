@@ -6,23 +6,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { ComplianceApiService } from '../../../core/services/compliance-api.service';
 import { DeviceApiService } from '../../../core/services/device-api.service';
 import {
-  ComplianceBreakdownItem,
-  ComplianceDashboardResponse,
   ComplianceFilterState,
-  ComplianceHeatmapCell,
   ComplianceKri,
-  ComplianceKriFailureItem,
   ComplianceKriTableRow,
-  ComplianceSummaryResponse,
   DeviceComplianceResponse,
-  IncidentCompliancePoint,
-  LifecycleCompliancePoint,
 } from '../../../core/models/compliance.model';
 import { DeviceInventoryItem } from '../../../core/models/device.model';
 import { PageHeaderComponent } from '../../../shared/components/page-header.component';
-import { SummaryCardsComponent, SummaryMetric } from '../../../shared/components/summary-cards.component';
 import { FilterFieldDefinition, FilterPanelComponent, FilterPanelState } from '../../../shared/components/filter-panel.component';
-import { ComplianceChartsComponent } from '../components/compliance-charts.component';
 import { ComplianceKriTableComponent } from '../components/compliance-kri-table.component';
 import { ComplianceAiPanelComponent } from '../components/compliance-ai-panel.component';
 
@@ -38,9 +29,7 @@ type ComplianceDeviceView = DeviceComplianceResponse & {
     MatButtonModule,
     MatIconModule,
     PageHeaderComponent,
-    SummaryCardsComponent,
     FilterPanelComponent,
-    ComplianceChartsComponent,
     ComplianceKriTableComponent,
     ComplianceAiPanelComponent,
   ],
@@ -48,19 +37,36 @@ type ComplianceDeviceView = DeviceComplianceResponse & {
     <section class="compliance-page">
       <app-page-header
         title="Compliance Operations"
-        description="Enterprise compliance intelligence across KRIs, lifecycle posture, incident behavior, and AI-guided remediation."
+        description="Operational view of KRIs, risk posture, and AI-guided remediation priorities."
       />
 
       @if (errorMessage()) {
         <div class="error-banner">{{ errorMessage() }}</div>
       }
 
-      <app-summary-cards [metrics]="summaryMetrics()" />
+      <section class="overview-strip">
+        <article>
+          <span>Devices In Scope</span>
+          <strong>{{ overview().devices }}</strong>
+        </article>
+        <article>
+          <span>Overall Compliance</span>
+          <strong>{{ overview().compliance }}%</strong>
+        </article>
+        <article>
+          <span>Failing KRIs</span>
+          <strong>{{ overview().failingKris }}</strong>
+        </article>
+        <article>
+          <span>High/Critical Risk Devices</span>
+          <strong>{{ overview().atRiskDevices }}</strong>
+        </article>
+      </section>
 
       <section class="toolbar">
         <button mat-flat-button class="primary" (click)="recalculate()" [disabled]="busy()">
           <mat-icon>refresh</mat-icon>
-          Recalculate Compliance
+          Refresh Compliance
         </button>
 
         <button mat-stroked-button (click)="generateKriSuggestions()" [disabled]="busy()">
@@ -85,28 +91,59 @@ type ComplianceDeviceView = DeviceComplianceResponse & {
         (resetClicked)="resetFilters()"
       />
 
-      <app-compliance-charts
-        [dashboard]="filteredDashboard()"
-        [devices]="filteredDevices()"
-        [filters]="filters()"
-      />
+      <section class="main-layout">
+        <div class="table-area">
+          <div class="section-label">KRI Status</div>
+          <app-compliance-kri-table [rows]="kriRows()" [displayedColumns]="operationsColumns" />
+        </div>
 
-      <app-compliance-kri-table [rows]="kriRows()" />
-
-      <app-compliance-ai-panel (decisionComplete)="refreshHistory()" />
+        <div class="panel-area">
+          <div class="section-label">AI Recommendation</div>
+          <app-compliance-ai-panel (decisionComplete)="refreshHistory()" />
+        </div>
+      </section>
     </section>
   `,
   styles: `
     .compliance-page {
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      gap: 0.75rem;
+    }
+
+    .overview-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 0.55rem;
+    }
+
+    .overview-strip article {
+      border: 1px solid var(--app-border);
+      border-radius: var(--app-radius-sm);
+      padding: 0.55rem 0.65rem;
+      background: var(--app-card-bg);
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .overview-strip span {
+      font-size: 0.68rem;
+      color: var(--app-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+    }
+
+    .overview-strip strong {
+      font-size: 1rem;
+      color: var(--app-text);
     }
 
     .toolbar {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.6rem;
+      gap: 0.5rem;
       align-items: center;
     }
 
@@ -134,6 +171,36 @@ type ComplianceDeviceView = DeviceComplianceResponse & {
       border: 1px solid rgba(6, 182, 212, 0.3);
       color: var(--app-accent);
     }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 0.75rem;
+      align-items: start;
+    }
+
+    .table-area,
+    .panel-area {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      min-width: 0;
+    }
+
+    .section-label {
+      font-size: 0.7rem;
+      color: var(--app-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+      padding: 0 0.1rem;
+    }
+
+    @media (max-width: 1100px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+    }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -146,11 +213,11 @@ export class ComplianceOperationsPageComponent {
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly statusMessage = signal<string | null>(null);
 
-  private readonly summary = signal<ComplianceSummaryResponse | null>(null);
-  private readonly dashboard = signal<ComplianceDashboardResponse | null>(null);
   private readonly allKris = signal<ComplianceKri[]>([]);
   private readonly allDevices = signal<DeviceInventoryItem[]>([]);
   private readonly complianceByDevice = signal<ComplianceDeviceView[]>([]);
+
+  protected readonly operationsColumns = ['name', 'severity', 'currentValue', 'status', 'approved'];
 
   protected readonly filters = signal<ComplianceFilterState>({
     search: '',
@@ -238,52 +305,17 @@ export class ComplianceOperationsPageComponent {
     });
   });
 
-  protected readonly summaryMetrics = computed<SummaryMetric[]>(() => {
+  protected readonly overview = computed(() => {
     const devices = this.filteredDevices();
-    const avg = avgCompliance(devices);
+    const avg = avgCompliance(devices).toFixed(1);
     const failedKriCount = this.kriRows().filter((k) => k.status === 'Failing').length;
-    const criticalKriCount = this.kriRows().filter((k) => k.status === 'Failing' && k.severity.toLowerCase() === 'critical').length;
     const atRisk = devices.filter((d) => d.riskLevel === 'High' || d.riskLevel === 'Critical').length;
-    const lifecycleViolations = devices.filter((d) => d.lifecycleStage === 'Disinvest' || d.lifecycleStage === 'Unsupported').length;
-    const incidentViolations = devices.filter((d) => d.incidentCount >= 2).length;
-    const upcomingRisks = devices.filter((d) => d.riskLevel !== 'Low' && d.overallCompliance < 85).length;
-
-    return [
-      { title: 'Overall Compliance', value: `${avg.toFixed(1)}%`, icon: 'verified' },
-      { title: 'Critical KRIs', value: String(criticalKriCount), icon: 'gpp_bad' },
-      { title: 'Failed KRIs', value: String(failedKriCount), icon: 'rule' },
-      { title: 'Devices at Risk', value: String(atRisk), icon: 'warning' },
-      { title: 'Lifecycle Violations', value: String(lifecycleViolations), icon: 'event_busy' },
-      { title: 'Incident Violations', value: String(incidentViolations), icon: 'report_problem' },
-      { title: 'Upcoming Compliance Risks', value: String(upcomingRisks), icon: 'notifications_active' },
-    ];
-  });
-
-  protected readonly filteredDashboard = computed<ComplianceDashboardResponse | null>(() => {
-    const devices = this.filteredDevices();
-    if (!devices.length) {
-      return this.dashboard();
-    }
-
-    const topFailed = topFailedFromDevices(devices);
 
     return {
-      summaryCards: {
-        totalDevices: devices.length,
-        compliantDevices: devices.filter((d) => d.overallCompliance >= 85).length,
-        atRiskDevices: devices.filter((d) => d.riskLevel === 'High' || d.riskLevel === 'Critical').length,
-        criticalRiskDevices: devices.filter((d) => d.riskLevel === 'Critical').length,
-        averageCompliance: avgCompliance(devices),
-        failedKriObservations: devices.reduce((sum, d) => sum + (d.failedKRIs?.length ?? 0), 0),
-      },
-      vendorCompliance: breakdown(devices, (d) => d.vendor),
-      regionCompliance: breakdown(devices, (d) => d.region),
-      deviceTypeCompliance: breakdown(devices, (d) => d.deviceType),
-      topFailedKRIs: topFailed,
-      complianceHeatmap: heatmap(devices),
-      lifecycleVsCompliance: lifecycleVs(devices),
-      incidentVsCompliance: incidentVs(devices),
-      generatedAt: new Date().toISOString(),
+      devices: devices.length,
+      compliance: avg,
+      failingKris: failedKriCount,
+      atRiskDevices: atRisk,
     };
   });
 
@@ -371,8 +403,6 @@ export class ComplianceOperationsPageComponent {
           );
 
           return forkJoin({
-            summary: this.complianceApi.getSummary(),
-            dashboard: this.complianceApi.getDashboard(),
             kris: this.complianceApi.getKris(),
             complianceRows: forkJoin(complianceCalls).pipe(
               map((rows) => rows.filter((row): row is ComplianceDeviceView => row !== null))
@@ -381,9 +411,7 @@ export class ComplianceOperationsPageComponent {
         })
       )
       .subscribe({
-        next: ({ summary, dashboard, kris, complianceRows }) => {
-          this.summary.set(summary);
-          this.dashboard.set(dashboard);
+        next: ({ kris, complianceRows }) => {
           this.allKris.set(kris);
           this.complianceByDevice.set(complianceRows);
           this.busy.set(false);
@@ -412,98 +440,4 @@ function avgCompliance(devices: DeviceComplianceResponse[]): number {
     return 0;
   }
   return devices.reduce((sum, item) => sum + item.overallCompliance, 0) / devices.length;
-}
-
-function breakdown(
-  devices: DeviceComplianceResponse[],
-  keySelector: (device: DeviceComplianceResponse) => string
-): ComplianceBreakdownItem[] {
-  const mapByDimension = new Map<string, DeviceComplianceResponse[]>();
-
-  for (const device of devices) {
-    const key = keySelector(device) || 'Unknown';
-    const list = mapByDimension.get(key) ?? [];
-    list.push(device);
-    mapByDimension.set(key, list);
-  }
-
-  return [...mapByDimension.entries()]
-    .map(([name, list]) => ({
-      name,
-      deviceCount: list.length,
-      highRiskDevices: list.filter((d) => d.riskLevel === 'High' || d.riskLevel === 'Critical').length,
-      averageCompliance: avgCompliance(list),
-    }))
-    .sort((a, b) => b.averageCompliance - a.averageCompliance);
-}
-
-function topFailedFromDevices(devices: DeviceComplianceResponse[]): ComplianceKriFailureItem[] {
-  const counter = new Map<string, number>();
-
-  devices.forEach((device) => {
-    (device.failedKRIs ?? []).forEach((kri) => {
-      counter.set(kri, (counter.get(kri) ?? 0) + 1);
-    });
-  });
-
-  return [...counter.entries()]
-    .map(([kriName, failedDevices], index) => ({
-      kriId: `KRI-${index + 1}`,
-      kriName,
-      severity: 'High',
-      failedDevices,
-    }))
-    .sort((a, b) => b.failedDevices - a.failedDevices)
-    .slice(0, 10);
-}
-
-function heatmap(devices: DeviceComplianceResponse[]): ComplianceHeatmapCell[] {
-  const mapByCell = new Map<string, DeviceComplianceResponse[]>();
-  devices.forEach((device) => {
-    const key = `${device.region}|${device.riskLevel}`;
-    const list = mapByCell.get(key) ?? [];
-    list.push(device);
-    mapByCell.set(key, list);
-  });
-
-  return [...mapByCell.entries()].map(([key, list]) => {
-    const [region, riskLevel] = key.split('|');
-    return {
-      region,
-      riskLevel,
-      deviceCount: list.length,
-      averageCompliance: avgCompliance(list),
-    };
-  });
-}
-
-function lifecycleVs(devices: DeviceComplianceResponse[]): LifecycleCompliancePoint[] {
-  const groups = new Map<string, DeviceComplianceResponse[]>();
-  devices.forEach((device) => {
-    const list = groups.get(device.lifecycleStage) ?? [];
-    list.push(device);
-    groups.set(device.lifecycleStage, list);
-  });
-
-  return [...groups.entries()].map(([lifecycleStage, list]) => ({
-    lifecycleStage,
-    deviceCount: list.length,
-    averageCompliance: avgCompliance(list),
-  }));
-}
-
-function incidentVs(devices: DeviceComplianceResponse[]): IncidentCompliancePoint[] {
-  const groups = new Map<string, DeviceComplianceResponse[]>();
-  devices.forEach((device) => {
-    const band = device.incidentCount <= 0 ? '0' : device.incidentCount === 1 ? '1' : '2+';
-    const list = groups.get(band) ?? [];
-    list.push(device);
-    groups.set(band, list);
-  });
-
-  return [...groups.entries()].map(([incidentBand, list]) => ({
-    incidentBand,
-    deviceCount: list.length,
-    averageCompliance: avgCompliance(list),
-  }));
 }
