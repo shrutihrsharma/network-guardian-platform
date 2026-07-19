@@ -1,12 +1,14 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-toolbar',
   standalone: true,
-  imports: [MatToolbarModule, MatIconModule, MatButtonModule],
+  imports: [MatToolbarModule, MatIconModule, MatButtonModule, MatMenuModule],
   template: `
     <mat-toolbar class="top-toolbar">
       <div class="toolbar__brand">
@@ -33,13 +35,43 @@ import { MatButtonModule } from '@angular/material/button';
         <mat-icon>notifications_none</mat-icon>
       </button>
 
-      <div class="toolbar__avatar" aria-label="User menu">
-        <span class="toolbar__avatar-initials">NG</span>
+      <div class="toolbar__avatar" [matMenuTriggerFor]="userMenu" aria-label="User menu">
+        @if (userPicture()) {
+          <img
+            class="toolbar__avatar-img"
+            [src]="userPicture()"
+            [alt]="userName()"
+            referrerpolicy="no-referrer"
+          />
+        } @else {
+          <span class="toolbar__avatar-initials">{{ userInitials() }}</span>
+        }
         <div class="toolbar__avatar-info">
-          <span class="toolbar__avatar-name">Admin</span>
-          <span class="toolbar__avatar-role">Network Engineer</span>
+          <span class="toolbar__avatar-name">{{ userName() }}</span>
+          <span class="toolbar__avatar-role">{{ userEmail() }}</span>
         </div>
+        <mat-icon class="toolbar__avatar-chevron">expand_more</mat-icon>
       </div>
+
+      <mat-menu #userMenu="matMenu" class="user-menu">
+        <div class="user-menu__header" mat-menu-item disabled>
+          <div class="user-menu__profile">
+            @if (userPicture()) {
+              <img class="user-menu__pic" [src]="userPicture()" [alt]="userName()" referrerpolicy="no-referrer" />
+            } @else {
+              <span class="user-menu__initials">{{ userInitials() }}</span>
+            }
+            <div>
+              <div class="user-menu__name">{{ userName() }}</div>
+              <div class="user-menu__email">{{ userEmail() }}</div>
+            </div>
+          </div>
+        </div>
+        <button mat-menu-item (click)="onSignOut()">
+          <mat-icon>logout</mat-icon>
+          <span>Sign out</span>
+        </button>
+      </mat-menu>
     </mat-toolbar>
   `,
   styles: `
@@ -161,7 +193,7 @@ import { MatButtonModule } from '@angular/material/button';
       display: flex;
       align-items: center;
       gap: 0.6rem;
-      padding: 0.35rem 0.75rem 0.35rem 0.35rem;
+      padding: 0.35rem 0.6rem 0.35rem 0.35rem;
       border-radius: 2rem;
       background: var(--app-surface-strong);
       border: 1px solid var(--app-border);
@@ -172,6 +204,14 @@ import { MatButtonModule } from '@angular/material/button';
 
     .toolbar__avatar:hover {
       border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    .toolbar__avatar-img {
+      width: 1.9rem;
+      height: 1.9rem;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
     }
 
     .toolbar__avatar-initials {
@@ -205,8 +245,84 @@ import { MatButtonModule } from '@angular/material/button';
       font-size: 0.68rem;
       color: var(--app-text-muted);
       line-height: 1.2;
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .toolbar__avatar-chevron {
+      font-size: 1.1rem;
+      width: 1.1rem;
+      height: 1.1rem;
+      color: var(--app-text-muted);
+      transition: transform 0.2s;
+    }
+
+    // ── User Menu ──
+
+    .user-menu__header {
+      pointer-events: none;
+    }
+
+    .user-menu__profile {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.25rem 0;
+    }
+
+    .user-menu__pic {
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .user-menu__initials {
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 50%;
+      background: var(--app-primary);
+      color: #080c14;
+      font-size: 0.75rem;
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+    }
+
+    .user-menu__name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--app-text);
+      line-height: 1.3;
+    }
+
+    .user-menu__email {
+      font-size: 0.72rem;
+      color: var(--app-text-muted);
+      line-height: 1.3;
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ToolbarComponent {}
+export class ToolbarComponent {
+  private readonly authService = inject(AuthService);
+
+  readonly userName = computed(() => this.authService.user()?.name ?? 'User');
+  readonly userEmail = computed(() => this.authService.user()?.email ?? '');
+  readonly userPicture = computed(() => this.authService.user()?.picture ?? '');
+  readonly userInitials = computed(() => {
+    const name = this.userName();
+    if (!name) return 'U';
+    const parts = name.split(' ').filter(Boolean);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  });
+
+  onSignOut(): void {
+    this.authService.logout();
+  }
+}

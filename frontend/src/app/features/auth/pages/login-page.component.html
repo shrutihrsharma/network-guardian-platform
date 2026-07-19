@@ -1,0 +1,59 @@
+<div class="login-page">
+  <!-- Animated background particles -->
+  <div class="bg-grid"></div>
+  <div class="bg-glow bg-glow--1"></div>
+  <div class="bg-glow bg-glow--2"></div>
+  <div class="bg-glow bg-glow--3"></div>
+
+  <div class="login-card">
+    <!-- Brand section -->
+    <div class="login-card__brand">
+      <div class="login-card__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" height="32" width="32" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+          <circle cx="12" cy="12" r="3" fill="currentColor" opacity="0.6"/>
+          <path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"
+                stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.4"/>
+        </svg>
+      </div>
+      <h1 class="login-card__title">Network Guardian</h1>
+      <p class="login-card__subtitle">PLATFORM · V2.0</p>
+    </div>
+
+    <!-- Divider -->
+    <div class="login-card__divider"></div>
+
+    <!-- Welcome text -->
+    <div class="login-card__welcome">
+      <h2 class="login-card__heading">Welcome back</h2>
+      <p class="login-card__desc">Sign in to access your network intelligence dashboard</p>
+    </div>
+
+    <!-- Loading spinner (shown during authentication) -->
+    @if (authService.isLoggingIn()) {
+      <div class="login-card__loading">
+        <div class="login-card__spinner"></div>
+        <p>Signing you in…</p>
+      </div>
+    }
+
+    <!-- Error message -->
+    @if (authService.loginError()) {
+      <div class="login-card__error">
+        <span class="login-card__error-icon">⚠️</span>
+        {{ authService.loginError() }}
+      </div>
+    }
+
+    <!-- Google Sign-In button container -->
+    <div class="login-card__google-btn" [class.login-card__google-btn--hidden]="authService.isLoggingIn()" #googleBtn></div>
+
+    <!-- Footer -->
+    <div class="login-card__footer">
+      <p>Secured with Google OAuth 2.0</p>
+    </div>
+  </div>
+
+  <!-- Bottom tagline -->
+  <p class="login-page__tagline">AI-Powered Network Intelligence & Decision Platform</p>
+</div>

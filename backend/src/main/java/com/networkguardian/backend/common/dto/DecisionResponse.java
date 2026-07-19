@@ -21,7 +21,8 @@ public class DecisionResponse {
     private String reasoning;
     private String businessImpact;
     private boolean approvalRequired;
-    private List<DecisionEvidenceItem> evidence;
+    // Using Object to handle both legacy string entries and structured DecisionEvidenceItem objects in MongoDB
+    private List<Object> evidence;
     private String provider;
     private String model;
     private long executionTimeMs;
