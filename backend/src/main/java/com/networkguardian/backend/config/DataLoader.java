@@ -27,7 +27,9 @@ import com.networkguardian.backend.repository.DeviceRepository;
 import com.networkguardian.backend.repository.HistoricalIncidentRepository;
 import com.networkguardian.backend.repository.IncidentRepository;
 import com.networkguardian.backend.repository.RunbookRepository;
+import com.networkguardian.backend.repository.SecurityFindingRepository;
 import com.networkguardian.backend.repository.SoftwareLifecycleRepository;
+import com.networkguardian.backend.security.model.SecurityFinding;
 
 @Component
 @ConditionalOnProperty(name = "app.seed.enabled", havingValue = "true", matchIfMissing = true)
@@ -44,6 +46,7 @@ public class DataLoader {
     private final DecisionAuditRepository decisionAuditRepository;
     private final ComplianceKriRepository complianceKriRepository;
     private final DeviceComplianceRepository deviceComplianceRepository;
+    private final SecurityFindingRepository securityFindingRepository;
     private final ComplianceService complianceService;
     private final Random random = new Random(42);
 
@@ -56,6 +59,7 @@ public class DataLoader {
             DecisionAuditRepository decisionAuditRepository,
             ComplianceKriRepository complianceKriRepository,
             DeviceComplianceRepository deviceComplianceRepository,
+            SecurityFindingRepository securityFindingRepository,
             ComplianceService complianceService) {
         this.incidentRepository = incidentRepository;
         this.deviceRepository = deviceRepository;
@@ -65,6 +69,7 @@ public class DataLoader {
         this.decisionAuditRepository = decisionAuditRepository;
         this.complianceKriRepository = complianceKriRepository;
         this.deviceComplianceRepository = deviceComplianceRepository;
+        this.securityFindingRepository = securityFindingRepository;
         this.complianceService = complianceService;
     }
 
@@ -127,6 +132,13 @@ public class DataLoader {
             log.info("✓ Calculated compliance for {} devices", deviceRepository.count());
         }
 
+        if (securityFindingRepository.count() == 0) {
+            log.info("Seeding security findings...");
+            List<SecurityFinding> findings = generateSecurityFindings(devices);
+            securityFindingRepository.saveAll(findings);
+            log.info("✓ Seeded {} security findings", findings.size());
+        }
+
         log.info("Data seeding completed successfully.");
     }
 
@@ -182,6 +194,139 @@ public class DataLoader {
 
         return list;
     }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        //  SECURITY FINDINGS
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        private List<SecurityFinding> generateSecurityFindings(List<Device> devices) {
+        if (devices.isEmpty()) {
+            return List.of();
+        }
+
+        List<FindingTemplate> templates = securityFindingTemplates();
+        List<SecurityFinding> findings = new ArrayList<>();
+        java.util.Map<String, Integer> findingCountByDevice = new java.util.HashMap<>();
+
+        int targetFindingCount = 90;
+        int idCounter = 1;
+        int templateIndex = 0;
+
+        while (findings.size() < targetFindingCount) {
+            Device device = devices.get(random.nextInt(devices.size()));
+            int currentCount = findingCountByDevice.getOrDefault(device.getId(), 0);
+            if (currentCount >= 3) {
+            continue;
+            }
+
+            FindingTemplate template = templates.get(templateIndex++ % templates.size());
+            findingCountByDevice.put(device.getId(), currentCount + 1);
+
+            LocalDateTime createdAt = LocalDateTime.now().minusHours(6 + random.nextInt(720));
+            findings.add(SecurityFinding.builder()
+                .id("SEC-" + String.format("%04d", idCounter++))
+                .deviceId(device.getId())
+                .deviceName(device.getHostname())
+                .vendor(device.getVendor())
+                .region(toRegion(device.getLocation()))
+                .businessService(device.getBusinessService())
+                .severity(template.severity)
+                .category(template.category)
+                .title(template.title)
+                .description(template.description)
+                .complianceImpact(template.complianceImpact)
+                .status(template.status)
+                .riskScore(template.baseRisk + random.nextInt(8))
+                .affectedAssets(1 + random.nextInt(7))
+                .createdAt(createdAt)
+                .build());
+        }
+
+        return findings;
+        }
+
+        private List<FindingTemplate> securityFindingTemplates() {
+        return List.of(
+            finding("Critical", "FIREWALL", "Firewall Any->Any Rule Detected",
+                "Outbound and inbound any-any policy detected on perimeter firewall, expanding attack surface.",
+                "Internal Policy", "Open", 92),
+            finding("High", "ENCRYPTION", "TLS 1.0 Still Enabled",
+                "Legacy TLS 1.0 support is active on management endpoint and violates hardening baseline.",
+                "PCI-DSS", "Open", 86),
+            finding("High", "CERTIFICATE", "Expired Certificate on Management Interface",
+                "Certificate expired on HTTPS management plane and could trigger trust failures or MITM risk.",
+                "GDPR", "Open", 82),
+            finding("Medium", "AUTHENTICATION", "Missing MFA for Privileged Remote Access",
+                "Administrative remote access path does not enforce MFA for all privileged operators.",
+                "Internal Policy", "Open", 74),
+            finding("High", "CONFIGURATION", "Weak SSH Configuration",
+                "SSH service allows outdated key exchange and MAC algorithms below enterprise baseline.",
+                "Internal Policy", "Mitigated", 78),
+            finding("Medium", "NETWORK_ACCESS", "SNMPv2 Enabled",
+                "SNMPv2 community strings are enabled for monitoring and should be migrated to SNMPv3.",
+                "Internal Policy", "Open", 66),
+            finding("Medium", "IDS", "Port Scan Detected from Internal Segment",
+                "IDS reported repeated lateral port scans targeting management and control interfaces.",
+                "None", "Open", 68),
+            finding("High", "LOGGING", "Syslog Forwarding Disabled",
+                "Critical security logs are not forwarded to SIEM, reducing incident detection coverage.",
+                "GDPR", "Open", 80),
+            finding("Low", "FIREWALL", "Unused Firewall Rule Older Than 180 Days",
+                "Firewall policy object has no traffic hits for six months and should be reviewed for cleanup.",
+                "Internal Policy", "Accepted", 48),
+            finding("High", "FIREWALL", "Shadowed Firewall Rule",
+                "A permissive parent rule shadows restrictive child rule, leading to ineffective segmentation.",
+                "PCI-DSS", "Open", 79),
+            finding("Medium", "ENCRYPTION", "Weak Cipher Suite Allowed",
+                "Cipher suites with CBC and legacy key lengths are still accepted on control plane endpoints.",
+                "PCI-DSS", "Mitigated", 72),
+            finding("High", "VULNERABILITY", "Vendor PSIRT Patch Missing",
+                "Known high-severity vulnerability patch window exceeded for installed device OS release.",
+                "Internal Policy", "Open", 84),
+            finding("Medium", "AUTHENTICATION", "Stale Local Admin Account",
+                "Dormant privileged local account detected and not covered by central identity governance.",
+                "GDPR", "Accepted", 63),
+            finding("Low", "CONFIGURATION", "NTP Not Authenticated",
+                "NTP synchronization does not enforce authentication, increasing spoofing risk.",
+                "Internal Policy", "Mitigated", 50),
+            finding("Critical", "NETWORK_ACCESS", "Unrestricted Management Port Exposure",
+                "Management interfaces exposed to broad network segments without approved access controls.",
+                "PCI-DSS", "Open", 94),
+            finding("High", "CERTIFICATE", "Certificate Chain Incomplete",
+                "Intermediate certificate missing in chain, causing intermittent trust failures.",
+                "None", "Mitigated", 76),
+            finding("Medium", "LOGGING", "Audit Log Retention Below Standard",
+                "Audit logs retained for shorter period than required by policy and regulatory guidance.",
+                "GDPR", "Open", 70),
+            finding("Low", "IDS", "Anomaly Signature Outdated",
+                "IDS signature pack is one revision behind recommended detection baseline.",
+                "None", "Accepted", 45));
+        }
+
+        private FindingTemplate finding(
+            String severity,
+            String category,
+            String title,
+            String description,
+            String complianceImpact,
+            String status,
+            int baseRisk) {
+        return new FindingTemplate(severity, category, title, description, complianceImpact, status, baseRisk);
+        }
+
+        private String toRegion(String location) {
+        if (location == null) {
+            return "AMER";
+        }
+        if (location.contains("London") || location.contains("Frankfurt") || location.contains("Dublin")) {
+            return "EMEA";
+        }
+        if (location.contains("Singapore") || location.contains("Tokyo") || location.contains("Sydney")
+            || location.contains("Hong Kong") || location.contains("Mumbai")) {
+            return "APAC";
+        }
+        return "AMER";
+        }
 
     private SoftwareLifecycle lc(String id, String vendor, String family, String os,
                                   String eng, String invest, String maintain,
@@ -534,4 +679,31 @@ public class DataLoader {
             .aiGenerated(false)
             .build();
         }
+
+    private static class FindingTemplate {
+        private final String severity;
+        private final String category;
+        private final String title;
+        private final String description;
+        private final String complianceImpact;
+        private final String status;
+        private final int baseRisk;
+
+        private FindingTemplate(
+                String severity,
+                String category,
+                String title,
+                String description,
+                String complianceImpact,
+                String status,
+                int baseRisk) {
+            this.severity = severity;
+            this.category = category;
+            this.title = title;
+            this.description = description;
+            this.complianceImpact = complianceImpact;
+            this.status = status;
+            this.baseRisk = baseRisk;
+        }
+    }
 }

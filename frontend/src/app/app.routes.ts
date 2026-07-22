@@ -38,6 +38,12 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'security',
+    loadComponent: () =>
+      import('./features/security/pages/security-page.component').then((m) => m.SecurityPageComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'compliance',
     loadChildren: () => import('./features/compliance/compliance.routes').then((m) => m.COMPLIANCE_ROUTES),
     canActivate: [authGuard]

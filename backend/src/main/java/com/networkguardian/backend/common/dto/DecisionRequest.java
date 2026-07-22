@@ -15,4 +15,6 @@ public class DecisionRequest {
     private String incidentId;
     /** Used by lifecycle and other device-centric decision modules. */
     private String deviceId;
+    /** Used by security posture decision workflows. */
+    private String findingId;
 }

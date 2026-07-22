@@ -25,4 +25,7 @@ export interface DecisionResponse {
   summary?: string;
   recommendedVersion?: string;
   recommendedWindow?: string;
+  complianceImpact?: string;
+  rootCause?: string;
+  automationAvailable?: string;
 }

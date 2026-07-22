@@ -21,8 +21,8 @@ public class DecisionResponse {
     private String reasoning;
     private String businessImpact;
     private boolean approvalRequired;
-    // Using Object to handle both legacy string entries and structured DecisionEvidenceItem objects in MongoDB
-    private List<Object> evidence;
+    // Allow structured evidence items while remaining flexible for legacy stored payloads.
+    private List<?> evidence;
     private String provider;
     private String model;
     private long executionTimeMs;
@@ -32,4 +32,8 @@ public class DecisionResponse {
     private String summary;
     private String recommendedVersion;
     private String recommendedWindow;
+    // Security-specific fields (null for other modules)
+    private String complianceImpact;
+    private String rootCause;
+    private String automationAvailable;
 }

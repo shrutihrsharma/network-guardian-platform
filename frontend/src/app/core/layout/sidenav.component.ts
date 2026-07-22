@@ -148,6 +148,7 @@ export class SideNavComponent {
     { label: 'Devices', icon: 'dns', route: '/devices', enabled: true },
     { label: 'Incidents', icon: 'warning', route: '/incidents', enabled: true },
     { label: 'Lifecycle', icon: 'timeline', route: '/lifecycle', enabled: true },
+    { label: 'Security Posture', icon: 'policy', route: '/security', enabled: true },
     { label: 'Compliance', icon: 'verified_user', route: '/compliance', enabled: true },
     { label: 'Decision History', icon: 'history', route: '/decision-history', enabled: true },
     { label: 'Settings', icon: 'settings', route: '/settings', enabled: true }
