@@ -1,6 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { environment } from '../../../environments/environment';
 
 export interface UserProfile {
   email: string;
@@ -37,7 +38,7 @@ export class AuthService {
     this.isLoggingIn.set(true);
 
     this.http
-      .post<UserProfile>('/api/auth/google', { idToken })
+      .post<UserProfile>(`${environment.apiBaseUrl}/auth/google`, { idToken })
       .subscribe({
         next: (response) => {
           this.userSignal.set(response);
