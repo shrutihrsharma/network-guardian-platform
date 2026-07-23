@@ -4,6 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { AuthService } from '../../core/services/auth.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-toolbar',
@@ -11,7 +12,11 @@ import { AuthService } from '../../core/services/auth.service';
   imports: [MatToolbarModule, MatIconModule, MatButtonModule, MatMenuModule],
   template: `
     <mat-toolbar class="top-toolbar">
-      <div class="toolbar__brand">
+      <a
+        class="toolbar__brand toolbar__brand-link"
+        [href]="landingPageUrl"
+        aria-label="Go to Sentinel AI landing page"
+      >
         <div class="toolbar__brand-icon">
           <img class="toolbar__brand-logo" src="assets/logo.svg" alt="Sentinel AI logo" />
         </div>
@@ -19,7 +24,7 @@ import { AuthService } from '../../core/services/auth.service';
           <div class="toolbar__title">Sentinel AI</div>
           <div class="toolbar__subtitle">PLATFORM · V2.0</div>
         </div>
-      </div>
+      </a>
 
       <span class="toolbar__spacer"></span>
 
@@ -95,6 +100,16 @@ import { AuthService } from '../../core/services/auth.service';
       gap: 0.75rem;
       min-width: 0;
       flex-shrink: 0;
+    }
+
+    .toolbar__brand-link {
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .toolbar__brand-link:hover {
+      opacity: 0.92;
     }
 
     .toolbar__brand-icon {
@@ -312,6 +327,7 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class ToolbarComponent {
   private readonly authService = inject(AuthService);
+  readonly landingPageUrl = environment.frontendReactLandingUrl;
 
   readonly userName = computed(() => this.authService.user()?.name ?? 'User');
   readonly userEmail = computed(() => this.authService.user()?.email ?? '');

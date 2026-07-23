@@ -29,7 +29,7 @@ export function AppSidebar() {
 
   return (
     <aside className="hidden lg:flex fixed inset-y-0 left-0 w-64 flex-col z-40 border-r border-border/40 bg-sidebar/70 backdrop-blur-xl">
-      <div className="px-5 pt-6 pb-4 flex items-center gap-3">
+      <Link to="/" className="px-5 pt-6 pb-4 flex items-center gap-3 hover:opacity-95">
         <img
           src="/assets/logo.svg"
           alt="Sentinel AI logo"
@@ -43,7 +43,7 @@ export function AppSidebar() {
             PLATFORM · V2.0
           </div>
         </div>
-      </div>
+      </Link>
 
       <div className="px-4 pt-2 pb-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80">
         Workspace
