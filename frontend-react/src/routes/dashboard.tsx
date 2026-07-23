@@ -194,7 +194,7 @@ function Dashboard() {
         </GlassCard>
 
         <GlassCard className="p-5">
-          <SectionHeader title="Compliance Distribution" hint="Across 1,284 apps" />
+          <SectionHeader title="Compliance Distribution" hint={`Across ${kpis.applicationsMonitored.toLocaleString()} apps`} />
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>

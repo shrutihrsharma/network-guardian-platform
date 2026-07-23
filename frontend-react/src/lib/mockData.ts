@@ -5,16 +5,31 @@ export interface Application {
   id: string;
   name: string;
   businessUnit: string;
+  businessDomain: string;
   criticality: "Tier 1" | "Tier 2" | "Tier 3";
   owner: string;
+  businessOwner: string;
   currentCompliance: number;
   predictedCompliance: number;
+  complianceStatus: "Compliant" | "At Risk" | "Critical";
   aiConfidence: number;
   riskScore: number;
   currentRisk: RiskLevel;
   predictedRisk: RiskLevel;
   probability: number;
   lastScan: string;
+  certificateExpiryDays: number;
+  certificateStatus: string;
+  openVulnerabilities: number;
+  openIncidents: number;
+  businessImpact: "Low" | "Medium" | "High";
+  technologyStack: string;
+  hostingEnvironment: string;
+  operationalDashboard: string;
+  persona: string;
+  recommendedAction: string;
+  executiveSummary: string;
+  aiRecommendation: string;
   reasons: string[];
   actions: { label: string; impact: number }[];
   estimatedReduction: number;
@@ -27,6 +42,7 @@ export const businessUnits = [
   "Treasury",
   "Technology",
   "Security",
+  "Network Infrastructure",
 ];
 
 const appSeeds = [
@@ -76,7 +92,7 @@ function riskFromScore(s: number): RiskLevel {
   return "Low";
 }
 
-export const applications: Application[] = appSeeds.map((s, i) => {
+const seededApplications: Application[] = appSeeds.map((s, i) => {
   const riskScore = [92, 74, 58, 88, 41, 66, 81, 55, 47, 62, 79, 84, 38, 71, 52][i];
   const currentCompliance = 100 - Math.round(riskScore * 0.35) - (i % 4);
   const predictedCompliance = Math.max(40, currentCompliance - Math.round(riskScore * 0.25));
@@ -85,28 +101,90 @@ export const applications: Application[] = appSeeds.map((s, i) => {
     id: `app-${i + 1}`,
     name: s.name,
     businessUnit: s.bu,
+    businessDomain: s.bu,
     criticality: s.crit as Application["criticality"],
     owner: s.owner,
+    businessOwner: s.owner,
     currentCompliance,
     predictedCompliance,
+    complianceStatus: predictedCompliance < 70 ? "At Risk" : "Compliant",
     aiConfidence: 88 + ((i * 7) % 11),
     riskScore,
     currentRisk: riskFromScore(currentRiskScore),
     predictedRisk: riskFromScore(riskScore),
     probability: 55 + ((i * 13) % 40),
     lastScan: `${1 + (i % 9)}h ago`,
+    certificateExpiryDays: 12 + (i % 45),
+    certificateStatus: i % 3 === 0 ? `Expiring in ${12 + (i % 45)} days` : "Healthy",
+    openVulnerabilities: 2 + (i % 9),
+    openIncidents: 1 + (i % 4),
+    businessImpact: s.crit === "Tier 1" ? "High" : "Medium",
+    technologyStack: "Java, Spring Boot, APIs",
+    hostingEnvironment: i % 2 === 0 ? "Hybrid Cloud" : "Public Cloud",
+    operationalDashboard: "Network Guardian",
+    persona: "ITO",
+    recommendedAction: "Prioritize control remediation and validate compliance evidence.",
+    executiveSummary: `${s.name} remains within acceptable thresholds but requires active monitoring due to predicted control drift.`,
+    aiRecommendation: "AI recommends prioritizing the highest-impact remediation items to reduce near-term audit exposure.",
     reasons: reasonPool.slice(0, 4 + (i % 4)),
     actions: actionPool.slice(0, 3 + (i % 3)),
     estimatedReduction: 40 + ((i * 9) % 45),
   };
 });
 
+const gnsNetworker: Application = {
+  id: `app-${appSeeds.length + 1}`,
+  name: "GNS Networker",
+  businessUnit: "Network Infrastructure",
+  businessDomain: "Network Infrastructure",
+  criticality: "Tier 1",
+  owner: "Network Engineering",
+  businessOwner: "Network Engineering",
+  currentCompliance: 68,
+  predictedCompliance: 52,
+  complianceStatus: "At Risk",
+  aiConfidence: 96,
+  riskScore: 92,
+  currentRisk: "High",
+  predictedRisk: "Critical",
+  probability: 92,
+  lastScan: "45m ago",
+  certificateExpiryDays: 18,
+  certificateStatus: "Expiring in 18 days",
+  openVulnerabilities: 7,
+  openIncidents: 3,
+  businessImpact: "High",
+  technologyStack: "Java, Spring Boot, Network Automation",
+  hostingEnvironment: "Private Cloud",
+  operationalDashboard: "Network Guardian",
+  persona: "ITO",
+  recommendedAction: "Renew certificates, validate configuration compliance, and review incident trends.",
+  executiveSummary:
+    "This application is forecasted to become non-compliant within 30 days if remediation is not completed.",
+  aiRecommendation:
+    "AI predicts elevated operational risk due to expiring certificates and recent incident trends. Immediate certificate renewal and compliance validation are recommended.",
+  reasons: [
+    "TLS certificate expires in 18 days",
+    "Three open incidents indicate elevated operational instability",
+    "Seven unresolved vulnerabilities remain above SLA",
+    "Tier-1 service with high business impact in network infrastructure",
+  ],
+  actions: [
+    { label: "Renew expiring production certificates", impact: 18 },
+    { label: "Validate configuration compliance across network automation pipelines", impact: 12 },
+    { label: "Review active incident trends and implement remediation", impact: 11 },
+  ],
+  estimatedReduction: 41,
+};
+
+export const applications: Application[] = [...seededApplications, gnsNetworker];
+
 export const kpis = {
   complianceScore: 96,
-  applicationsMonitored: 1284,
-  applicationsAtRisk: 67,
-  criticalRisks: 12,
-  predictedAuditFailures: 9,
+  applicationsMonitored: 1285,
+  applicationsAtRisk: 68,
+  criticalRisks: 13,
+  predictedAuditFailures: 10,
   avgAiConfidence: 97,
 };
 
@@ -127,7 +205,7 @@ export const complianceTrend = [
 
 export const complianceDistribution = [
   { name: "Compliant", value: 1042, color: "var(--success)" },
-  { name: "At Risk", value: 175, color: "var(--warning)" },
+  { name: "At Risk", value: 176, color: "var(--warning)" },
   { name: "Critical", value: 67, color: "var(--danger)" },
 ];
 
@@ -163,6 +241,13 @@ export const recommendations = [
   { id: 1, title: "Prioritize Payments API remediation", impact: "Prevents predicted audit failure", risk: 68 },
   { id: 2, title: "Renew 8 expiring certificates this week", impact: "Blocks 3 outages", risk: 42 },
   { id: 3, title: "Sunset EOL library across 14 apps", impact: "Removes recurring finding", risk: 55 },
+  {
+    id: 4,
+    title:
+      "AI predicts elevated operational risk due to expiring certificates and recent incident trends. Immediate certificate renewal and compliance validation are recommended.",
+    impact: "Protects GNS Networker from near-term non-compliance and operational disruption",
+    risk: 92,
+  },
 ];
 
 export const pendingApprovals = [
@@ -219,8 +304,42 @@ for (const app of applications) {
   }
 }
 
+findings.push(
+  {
+    id: `F-${fid++}`,
+    app: gnsNetworker.name,
+    bu: gnsNetworker.businessUnit,
+    type: "Certificates",
+    severity: "High",
+    title: "Production TLS certificate expires in 18 days",
+    age: 12,
+    riskScore: 91,
+  },
+  {
+    id: `F-${fid++}`,
+    app: gnsNetworker.name,
+    bu: gnsNetworker.businessUnit,
+    type: "Open Audit Findings",
+    severity: "High",
+    title: "Configuration compliance validation overdue for Network Guardian controls",
+    age: 21,
+    riskScore: 84,
+  },
+  {
+    id: `F-${fid++}`,
+    app: gnsNetworker.name,
+    bu: gnsNetworker.businessUnit,
+    type: "Infrastructure",
+    severity: "Medium",
+    title: "Incident trend indicates elevated operational instability",
+    age: 7,
+    riskScore: 78,
+  },
+);
+
 export const copilotSuggestions = [
   "Which application has the highest compliance risk?",
+  "Show risk status for GNS Networker.",
   "Why is Payments Platform high risk?",
   "Show applications likely to fail the next audit.",
   "Which applications need immediate remediation?",
@@ -234,6 +353,8 @@ export const copilotSuggestions = [
 
 export function copilotReply(prompt: string): string {
   const p = prompt.toLowerCase();
+  if (p.includes("gns") || p.includes("networker"))
+    return `**GNS Networker** is a **Tier 1 Critical** Network Infrastructure application with a **92%** predictive risk score and **68%** compliance score.\n\nAI predicts elevated operational risk due to **certificates expiring in 18 days**, **3 open incidents**, and **7 unresolved vulnerabilities**.\n\n**Recommended action:** Renew certificates, validate configuration compliance, and review incident trends. Without remediation, the application is forecasted to become non-compliant within **30 days**.`;
   if (p.includes("rtr") || p.includes("device") || p.includes("unhealthy"))
     return `**Device RTR-102** — degraded on Payments Platform.\n\nRoot cause (AI): firmware **9.3.11** matches vendor advisory CSCwd12345 — BGP flap under sustained load.\n\n**Recommendation:** upgrade to 9.3.14 in the next maintenance window. Predicted failure probability drops **62% → 14%**. Open the Operational Workspace → Devices to schedule.`;
   if (p.includes("why") && (p.includes("payments") || p.includes("high risk")))

@@ -5,7 +5,7 @@ import { ArrowUpDown, Search, SlidersHorizontal, ChevronRight, Network } from "l
 
 import { TopBar } from "@/components/TopBar";
 import { GlassCard, RiskBadge } from "@/components/ui-kit";
-import { applications, businessUnits } from "@/lib/mockData";
+import { applications, businessUnits, kpis } from "@/lib/mockData";
 import { setSelectedAppId } from "@/lib/opsData";
 
 export const Route = createFileRoute("/applications")({
@@ -61,7 +61,7 @@ function ApplicationsPage() {
     <>
       <TopBar
         title="Application Inventory"
-        subtitle="1,284 monitored applications across 6 business units"
+        subtitle={`${kpis.applicationsMonitored.toLocaleString()} monitored applications across ${businessUnits.length} business units`}
       />
 
       <GlassCard className="mt-6 p-4">

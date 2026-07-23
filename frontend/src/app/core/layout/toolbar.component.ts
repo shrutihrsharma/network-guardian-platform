@@ -97,7 +97,7 @@ import { environment } from '../../../environments/environment';
     .toolbar__brand {
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 0.4rem;
       min-width: 0;
       flex-shrink: 0;
     }
@@ -119,12 +119,13 @@ import { environment } from '../../../environments/environment';
       display: grid;
       place-items: center;
       overflow: hidden;
+      flex-shrink: 0;
     }
 
     .toolbar__brand-logo {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
+      width: 135%;
+      height: 135%;
+      object-fit: cover;
     }
 
     .toolbar__title {

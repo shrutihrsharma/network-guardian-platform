@@ -41,6 +41,22 @@ function seed(str: string, salt: number) {
 }
 
 export function opsMetrics(appId: string) {
+  const app = getApp(appId);
+  if (app.name === "GNS Networker") {
+    return {
+      health: 74,
+      availability: 98.6,
+      openIncidents: 3,
+      compliance: 68,
+      deviceCount: 184,
+      failureProb: 92,
+      certsExpiring: 1,
+      driftItems: 6,
+      eosCount: 2,
+      eolCount: 1,
+      patchCoverage: 81,
+    };
+  }
   const r = seed(appId, 7);
   return {
     health: 72 + Math.floor(r() * 25),
@@ -77,6 +93,38 @@ export function deviceInventory(appId: string) {
 }
 
 export function incidents(appId: string) {
+  const app = getApp(appId);
+  if (app.name === "GNS Networker") {
+    return [
+      {
+        id: "INC18421",
+        title: "Certificate handshake failure on automation gateway",
+        severity: "High" as const,
+        open: true,
+        affected: 6,
+        rootCause: "AI: Expiring TLS certificate correlated with repeated gateway authentication failures across network automation nodes",
+        opened: "4h ago",
+      },
+      {
+        id: "INC18422",
+        title: "Configuration drift detected on edge orchestration cluster",
+        severity: "Medium" as const,
+        open: true,
+        affected: 3,
+        rootCause: "AI: Baseline mismatch introduced during recent policy rollout in the private cloud environment",
+        opened: "19h ago",
+      },
+      {
+        id: "INC18423",
+        title: "Recurring latency spike in network compliance validation service",
+        severity: "Medium" as const,
+        open: true,
+        affected: 4,
+        rootCause: "AI: Incident trend suggests resource contention during compliance scans on shared private cloud workers",
+        opened: "31h ago",
+      },
+    ];
+  }
   const r = seed(appId, 91);
   const sev = ["Critical", "High", "Medium", "Low"] as const;
   const causes = [
@@ -100,6 +148,14 @@ export function incidents(appId: string) {
 }
 
 export function lifecycleItems(appId: string) {
+  const app = getApp(appId);
+  if (app.name === "GNS Networker") {
+    return [
+      { asset: "GNS-Gateway-01", eos: "2027-Q2", eol: "2029-Q1", patch: "Current", cert: 18, action: "Renew certificate" },
+      { asset: "GNS-Orchestrator-02", eos: "2026-Q4", eol: "2028-Q2", patch: "Behind", cert: 42, action: "Patch and validate config" },
+      { asset: "GNS-Policy-03", eos: "2027-Q1", eol: "2029-Q3", patch: "Current", cert: 64, action: "Monitor incident trend" },
+    ];
+  }
   const r = seed(appId, 21);
   return Array.from({ length: 10 }).map((_, i) => ({
     asset: `Device-${100 + i}`,
@@ -112,6 +168,16 @@ export function lifecycleItems(appId: string) {
 }
 
 export function complianceItems(appId: string) {
+  const app = getApp(appId);
+  if (app.name === "GNS Networker") {
+    return [
+      { control: "TLS Configuration", drift: true, compliant: 61, findings: 3, severity: "High" as const },
+      { control: "Firmware Version Baseline", drift: false, compliant: 79, findings: 1, severity: "Medium" as const },
+      { control: "Change Management", drift: true, compliant: 66, findings: 2, severity: "High" as const },
+      { control: "Access Control", drift: false, compliant: 74, findings: 1, severity: "Medium" as const },
+      { control: "Vulnerability Patching", drift: true, compliant: 68, findings: 4, severity: "High" as const },
+    ];
+  }
   const r = seed(appId, 55);
   const controls = [
     "TLS Configuration",
@@ -133,6 +199,14 @@ export function complianceItems(appId: string) {
 }
 
 export function riskForecast(appId: string) {
+  const app = getApp(appId);
+  if (app.name === "GNS Networker") {
+    return Array.from({ length: 12 }).map((_, i) => ({
+      week: `W${i + 1}`,
+      probability: Math.min(97, 78 + i + (i % 3) * 2),
+      baseline: 44,
+    }));
+  }
   const r = seed(appId, 8);
   return Array.from({ length: 12 }).map((_, i) => ({
     week: `W${i + 1}`,
@@ -170,6 +244,8 @@ export function decisionHistory(appId: string) {
 
 export function opsCopilotReply(prompt: string, appName: string) {
   const p = prompt.toLowerCase();
+  if (appName === "GNS Networker" && (p.includes("remediation") || p.includes("recommend") || p.includes("prediction") || p.includes("risk")))
+    return `AI predicts elevated operational risk for **GNS Networker** due to expiring certificates and recent incident trends. Immediate certificate renewal and compliance validation are recommended.\n\nCurrent indicators:\n- Predictive risk: **92%**\n- Compliance score: **68%**\n- Certificate expiry: **18 days**\n- Open incidents: **3**\n- Open vulnerabilities: **7**`;
   if (p.includes("rtr") || p.includes("device") || p.includes("unhealthy"))
     return `**Device RTR-102** — degraded state detected on ${appName}.\n\nAI root-cause: firmware **9.3.11** matches vendor advisory CSCwd12345 (BGP flap under sustained load).\n\n**Recommendation:** schedule firmware upgrade to 9.3.14 in the next maintenance window. Predicted failure probability drops **62% → 14%**.`;
   if (p.includes("prediction") || p.includes("explain"))

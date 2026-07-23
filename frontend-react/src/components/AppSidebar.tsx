@@ -29,11 +29,11 @@ export function AppSidebar() {
 
   return (
     <aside className="hidden lg:flex fixed inset-y-0 left-0 w-64 flex-col z-40 border-r border-border/40 bg-sidebar/70 backdrop-blur-xl">
-      <Link to="/" className="px-5 pt-6 pb-4 flex items-center gap-4 hover:opacity-95">
+      <Link to="/" className="px-5 pt-6 pb-4 flex items-center gap-2 hover:opacity-95">
         <img
           src="/assets/logo.svg"
           alt="Sentinel AI logo"
-          className="h-[7.5rem] w-[7.5rem] rounded-xl object-contain"
+          className="h-[7.5rem] w-[7.5rem] shrink-0 rounded-xl object-cover scale-[1.35]"
         />
         <div className="min-w-0">
           <div className="text-[13px] font-semibold tracking-wide text-foreground truncate">

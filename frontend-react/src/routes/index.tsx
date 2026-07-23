@@ -130,11 +130,11 @@ function Landing() {
 
       {/* Nav */}
       <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <img
             src="/assets/logo.svg"
             alt="Sentinel AI logo"
-            className="h-[7.5rem] w-[7.5rem] rounded-xl object-contain"
+            className="h-[7.5rem] w-[7.5rem] shrink-0 rounded-xl object-cover scale-[1.35]"
           />
           <div className="min-w-0">
             <div className="text-[13px] font-semibold tracking-wide text-foreground">
