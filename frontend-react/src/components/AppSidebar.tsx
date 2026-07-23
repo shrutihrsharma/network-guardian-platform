@@ -9,7 +9,6 @@ import {
   CheckSquare,
   FileBarChart2,
   Settings,
-  ShieldCheck,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -31,15 +30,17 @@ export function AppSidebar() {
   return (
     <aside className="hidden lg:flex fixed inset-y-0 left-0 w-64 flex-col z-40 border-r border-border/40 bg-sidebar/70 backdrop-blur-xl">
       <div className="px-5 pt-6 pb-4 flex items-center gap-3">
-        <div className="grid place-items-center h-10 w-10 rounded-xl gold-gradient shadow-lg shadow-black/30">
-          <ShieldCheck className="h-5 w-5 text-primary-foreground" strokeWidth={2.4} />
-        </div>
+        <img
+          src="/assets/logo.svg"
+          alt="Sentinel AI logo"
+          className="h-10 w-10 rounded-xl object-contain"
+        />
         <div className="min-w-0">
           <div className="text-[13px] font-semibold tracking-wide text-foreground truncate">
-            Compliance Sentinel AI
+            Sentinel AI
           </div>
           <div className="text-[10.5px] uppercase tracking-[0.18em] text-gold-gradient font-medium">
-            Executive · v2.4
+            PLATFORM · V2.0
           </div>
         </div>
       </div>

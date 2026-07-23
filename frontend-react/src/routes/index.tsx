@@ -131,15 +131,14 @@ function Landing() {
       {/* Nav */}
       <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10">
         <div className="flex items-center gap-3">
-          <div className="grid h-10 w-10 place-items-center rounded-xl gold-gradient shadow-lg shadow-black/30">
-            <ShieldCheck
-              className="h-5 w-5 text-primary-foreground"
-              strokeWidth={2.4}
-            />
-          </div>
+          <img
+            src="/assets/logo.svg"
+            alt="Sentinel AI logo"
+            className="h-10 w-10 rounded-xl object-contain"
+          />
           <div className="min-w-0">
             <div className="text-[13px] font-semibold tracking-wide text-foreground">
-              Compliance Sentinel AI
+              Sentinel AI
             </div>
             <div className="text-gold-gradient text-[10.5px] font-medium uppercase tracking-[0.18em]">
               Predict · Prevent · Prioritize

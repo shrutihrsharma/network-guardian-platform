@@ -13,10 +13,10 @@ import { AuthService } from '../../core/services/auth.service';
     <mat-toolbar class="top-toolbar">
       <div class="toolbar__brand">
         <div class="toolbar__brand-icon">
-          <mat-icon>hub</mat-icon>
+          <img class="toolbar__brand-logo" src="assets/logo.svg" alt="Sentinel AI logo" />
         </div>
         <div>
-          <div class="toolbar__title">Sentinel Compliance AI</div>
+          <div class="toolbar__title">Sentinel AI</div>
           <div class="toolbar__subtitle">PLATFORM · V2.0</div>
         </div>
       </div>
@@ -103,9 +103,13 @@ import { AuthService } from '../../core/services/auth.service';
       border-radius: 0.6rem;
       display: grid;
       place-items: center;
-      background: var(--app-primary-soft);
-      border: 1px solid var(--app-border-accent);
-      color: var(--app-primary);
+      overflow: hidden;
+    }
+
+    .toolbar__brand-logo {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
 
     .toolbar__title {
