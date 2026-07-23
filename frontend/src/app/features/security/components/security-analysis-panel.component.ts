@@ -21,130 +21,117 @@ import { SecurityFinding } from '../../../core/models/security-finding.model';
         <div class="error-banner">{{ errorMsg() }}</div>
       }
 
-      @if (finding(); as selected) {
-        <section class="panel-section">
-          <h4>Security Finding</h4>
-          <p class="finding-title">{{ selected.title }}</p>
-          <p class="finding-desc">{{ selected.description }}</p>
-        </section>
-
-        <section class="panel-section">
-          <h4>Device</h4>
-          <div class="detail-row"><span>Name</span><strong>{{ selected.deviceName }}</strong></div>
-          <div class="detail-row"><span>Vendor</span><strong>{{ selected.vendor }}</strong></div>
-          <div class="detail-row"><span>Region</span><strong>{{ selected.region }}</strong></div>
-          <div class="detail-row"><span>Business Service</span><strong>{{ selected.businessService }}</strong></div>
-        </section>
-
-        <section class="panel-section">
-          <h4>Category</h4>
-          <div class="detail-row"><strong>{{ selected.category.replaceAll('_', ' ') }}</strong></div>
-        </section>
-
-        <section class="panel-section">
-          <h4>Severity</h4>
-          <div class="detail-row"><strong>{{ selected.severity }}</strong></div>
-        </section>
-
-        <section class="panel-section">
-          <h4>Business Impact</h4>
-          <p class="placeholder-copy">{{ businessImpactText() }}</p>
-        </section>
-
-        <section class="panel-section">
-          <h4>Compliance Impact</h4>
-          <div class="detail-row"><strong>{{ selected.complianceImpact }}</strong></div>
-        </section>
-
-        <section class="panel-section">
-          <h4>Current Status</h4>
-          <div class="detail-row"><strong>{{ selected.status }}</strong></div>
-        </section>
-
-        <section class="panel-section">
-          <h4>Executive Summary</h4>
-          <p class="placeholder-copy">{{ executiveSummaryText() }}</p>
-        </section>
-
-        <section class="panel-section">
-          <h4>Root Cause</h4>
-          <p class="placeholder-copy">{{ rootCauseText() }}</p>
-        </section>
-
-        <section class="panel-section">
-          <h4>Supporting Evidence</h4>
-          @if (supportingEvidence().length) {
-            <div class="evidence-list">
-              @for (item of supportingEvidence(); track item.summary + item.title) {
-                <div class="evidence-item">
-                  <div class="evidence-title">{{ item.title }}</div>
-                  <div class="evidence-summary">{{ item.summary }}</div>
-                </div>
-              }
+      <div class="panel-content" [class.is-idle]="!finding()">
+        @if (finding(); as selected) {
+          <section class="panel-section">
+            <h4>Security Finding</h4>
+            <p class="finding-title">{{ selected.title }}</p>
+            <p class="finding-desc">{{ selected.description }}</p>
+            <div class="detail-row detail-row--compact"><span>Severity</span><strong>{{ selected.severity }}</strong></div>
+            <div class="detail-row detail-row--compact"><span>Current Status</span><strong>{{ selected.status }}</strong></div>
+            <div class="detail-row detail-row--stacked">
+              <span>Executive Summary</span>
+              <p class="placeholder-copy">{{ executiveSummaryText() }}</p>
             </div>
-          } @else {
-            <p class="placeholder-copy">Supporting evidence will appear here after analysis.</p>
-          }
-        </section>
+            <div class="detail-row detail-row--stacked">
+              <span>Root Cause</span>
+              <p class="placeholder-copy">{{ rootCauseText() }}</p>
+            </div>
+          </section>
 
-        <section class="panel-section">
-          <h4>Recommendation</h4>
-          <p class="placeholder-copy">{{ recommendationText() }}</p>
-          <div class="detail-row detail-row--compact"><span>Confidence</span><strong>{{ confidenceLabel() }}</strong></div>
-          <div class="detail-row detail-row--compact"><span>Automation Available</span><strong>{{ automationLabel() }}</strong></div>
-        </section>
+          <section class="panel-section">
+            <h4>Device</h4>
+            <div class="detail-row"><span>Name</span><strong>{{ selected.deviceName }}</strong></div>
+            <div class="detail-row"><span>Vendor</span><strong>{{ selected.vendor }}</strong></div>
+            <div class="detail-row"><span>Region</span><strong>{{ selected.region }}</strong></div>
+            <div class="detail-row"><span>Business Service</span><strong>{{ selected.businessService }}</strong></div>
+          </section>
 
-        <section class="panel-section">
-          <h4>Supporting Knowledge</h4>
-          <p class="placeholder-copy">
-            Enterprise runbooks, vendor advisories and internal documentation will appear here after RAG integration.
-          </p>
-        </section>
+          <section class="panel-section">
+            <h4>Category</h4>
+            <div class="detail-row"><strong>{{ selected.category.replaceAll('_', ' ') }}</strong></div>
+          </section>
 
-        <section class="panel-section">
-          <h4>Actions</h4>
-          <div class="action-grid">
-            <button mat-flat-button class="primary-action" type="button" [disabled]="loading()" (click)="analyze()">
-              @if (loading()) {
-                <mat-spinner diameter="16" />
-                Analyzing...
-              } @else {
-                Analyze
-              }
-            </button>
-            <button
-              mat-stroked-button
-              class="secondary-action"
-              type="button"
-              [disabled]="simulationRunning() || !result()"
-              (click)="simulateApplyRecommendation()"
-            >
-              Apply Recommendation
-            </button>
-            <button mat-stroked-button class="secondary-action" type="button" disabled>Export Report</button>
-            <button mat-stroked-button class="secondary-action" type="button" disabled>Generate Change Request</button>
+          <section class="panel-section">
+            <h4>Business Impact</h4>
+            <p class="placeholder-copy">{{ businessImpactText() }}</p>
+          </section>
+
+          <section class="panel-section">
+            <h4>Compliance Impact</h4>
+            <div class="detail-row"><strong>{{ selected.complianceImpact }}</strong></div>
+          </section>
+
+          <section class="panel-section">
+            <h4>Recommendation</h4>
+            <p class="placeholder-copy">{{ recommendationText() }}</p>
+            <div class="detail-row detail-row--compact"><span>Confidence</span><strong>{{ confidenceLabel() }}</strong></div>
+            <div class="detail-row detail-row--compact"><span>Automation Available</span><strong>{{ automationLabel() }}</strong></div>
+          </section>
+
+          <section class="panel-section">
+            <h4>Supporting Knowledge</h4>
+            @if (supportingEvidence().length) {
+              <div class="evidence-list">
+                @for (item of supportingEvidence(); track item.summary + item.title) {
+                  <div class="evidence-item">
+                    <div class="evidence-title">{{ item.title }}</div>
+                    <div class="evidence-summary">{{ item.summary }}</div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="placeholder-copy">
+                Enterprise runbooks, vendor advisories and internal documentation will appear here after RAG integration.
+              </p>
+            }
+          </section>
+
+          <section class="panel-section">
+            <h4>Actions</h4>
+            <div class="action-grid">
+              <button mat-flat-button class="primary-action" type="button" [disabled]="loading()" (click)="analyze()">
+                @if (loading()) {
+                  <mat-spinner diameter="16" />
+                  Analyzing...
+                } @else {
+                  Analyze
+                }
+              </button>
+              <button
+                mat-stroked-button
+                class="secondary-action"
+                type="button"
+                [disabled]="simulationRunning() || !result()"
+                (click)="simulateApplyRecommendation()"
+              >
+                Apply Recommendation
+              </button>
+              <button mat-stroked-button class="secondary-action" type="button" disabled>Export Report</button>
+              <button mat-stroked-button class="secondary-action" type="button" disabled>Generate Change Request</button>
+            </div>
+
+            @if (simulationVisible()) {
+              <div class="simulation-panel">
+                @for (step of simulationSteps; track step; let idx = $index) {
+                  <div class="simulation-step" [class.is-complete]="idx <= simulationStepIndex()">
+                    <span class="step-icon">✓</span>
+                    <span>{{ step }}</span>
+                  </div>
+                }
+                @if (simulationComplete()) {
+                  <div class="simulation-done">Simulation completed successfully.</div>
+                }
+              </div>
+            }
+          </section>
+        } @else {
+          <div class="idle-state">
+            <mat-icon>policy</mat-icon>
+            <p>Select a security finding to view its details and generate AI recommendations.</p>
           </div>
-
-          @if (simulationVisible()) {
-            <div class="simulation-panel">
-              @for (step of simulationSteps; track step; let idx = $index) {
-                <div class="simulation-step" [class.is-complete]="idx <= simulationStepIndex()">
-                  <span class="step-icon">✓</span>
-                  <span>{{ step }}</span>
-                </div>
-              }
-              @if (simulationComplete()) {
-                <div class="simulation-done">Simulation completed successfully.</div>
-              }
-            </div>
-          }
-        </section>
-      } @else {
-        <div class="idle-state">
-          <mat-icon>policy</mat-icon>
-          <p>Select a finding from the table to view analysis details and operational actions.</p>
-        </div>
-      }
+        }
+      </div>
     </aside>
   `,
   styles: `
@@ -152,21 +139,36 @@ import { SecurityFinding } from '../../../core/models/security-finding.model';
       background: var(--app-card-bg);
       border: 1px solid var(--app-border);
       border-radius: var(--app-radius);
-      padding: 0.85rem;
+      padding: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      height: 100%;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .panel-content {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
-      max-height: 44rem;
-      overflow-y: auto;
     }
 
-    .panel::-webkit-scrollbar {
+    .panel-content::-webkit-scrollbar {
       width: 0.45rem;
     }
 
-    .panel::-webkit-scrollbar-thumb {
+    .panel-content::-webkit-scrollbar-thumb {
       background: var(--app-border);
       border-radius: 0.25rem;
+    }
+
+    .panel-content.is-idle {
+      justify-content: center;
+      align-items: stretch;
     }
 
     .panel-head {
@@ -187,12 +189,16 @@ import { SecurityFinding } from '../../../core/models/security-finding.model';
     }
 
     .panel-section {
-      border: 1px solid var(--app-border);
-      border-radius: 0.65rem;
-      padding: 0.7rem;
+      border-top: 1px solid var(--app-border);
+      padding-top: 0.65rem;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.42rem;
+    }
+
+    .panel-section:first-child {
+      border-top: 0;
+      padding-top: 0;
     }
 
     .panel-section h4 {
@@ -222,8 +228,8 @@ import { SecurityFinding } from '../../../core/models/security-finding.model';
       display: flex;
       justify-content: space-between;
       gap: 0.55rem;
-      padding: 0.22rem 0;
-      border-bottom: 1px solid var(--app-border);
+      padding: 0.16rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .detail-row:last-child {
@@ -232,7 +238,13 @@ import { SecurityFinding } from '../../../core/models/security-finding.model';
     }
 
     .detail-row--compact {
-      padding-top: 0.3rem;
+      padding-top: 0.22rem;
+    }
+
+    .detail-row--stacked {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.28rem;
     }
 
     .detail-row span {
@@ -271,10 +283,9 @@ import { SecurityFinding } from '../../../core/models/security-finding.model';
     }
 
     .evidence-item {
-      border: 1px solid var(--app-border);
-      border-radius: 0.55rem;
-      padding: 0.55rem;
-      background: rgba(255, 255, 255, 0.02);
+      border-left: 2px solid rgba(148, 163, 184, 0.35);
+      padding: 0.35rem 0 0.35rem 0.5rem;
+      background: transparent;
     }
 
     .evidence-title {
@@ -337,11 +348,13 @@ import { SecurityFinding } from '../../../core/models/security-finding.model';
     .idle-state {
       display: flex;
       flex-direction: column;
+      justify-content: center;
       align-items: center;
       gap: 0.55rem;
       color: var(--app-text-muted);
       text-align: center;
-      padding: 1.75rem 1rem;
+      min-height: 100%;
+      padding: 1rem;
     }
 
     .idle-state mat-icon {
