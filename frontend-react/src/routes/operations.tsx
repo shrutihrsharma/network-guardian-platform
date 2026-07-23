@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
@@ -15,8 +15,12 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { getApp, getSelectedAppId, opsApps, setSelectedAppId } from "@/lib/opsData";
+import { getUser } from "@/lib/auth";
 
 export const Route = createFileRoute("/operations")({
+  beforeLoad: () => {
+    if (!getUser()) throw redirect({ to: "/login" });
+  },
   head: () => ({
     meta: [
       { title: "Operational Intelligence — Compliance Sentinel AI" },

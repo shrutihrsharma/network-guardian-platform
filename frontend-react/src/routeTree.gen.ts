@@ -14,6 +14,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RiskPredictionRouteImport } from './routes/risk-prediction'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as OperationsRouteImport } from './routes/operations'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as ExecutiveRouteImport } from './routes/executive'
 import { Route as DecisionsRouteImport } from './routes/decisions'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -53,6 +54,11 @@ const ReportsRoute = ReportsRouteImport.update({
 const OperationsRoute = OperationsRouteImport.update({
   id: '/operations',
   path: '/operations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExecutiveRoute = ExecutiveRouteImport.update({
@@ -139,6 +145,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/decisions': typeof DecisionsRoute
   '/executive': typeof ExecutiveRoute
+  '/login': typeof LoginRoute
   '/operations': typeof OperationsRouteWithChildren
   '/reports': typeof ReportsRoute
   '/risk-prediction': typeof RiskPredictionRoute
@@ -161,6 +168,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/decisions': typeof DecisionsRoute
   '/executive': typeof ExecutiveRoute
+  '/login': typeof LoginRoute
   '/reports': typeof ReportsRoute
   '/risk-prediction': typeof RiskPredictionRoute
   '/settings': typeof SettingsRoute
@@ -183,6 +191,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/decisions': typeof DecisionsRoute
   '/executive': typeof ExecutiveRoute
+  '/login': typeof LoginRoute
   '/operations': typeof OperationsRouteWithChildren
   '/reports': typeof ReportsRoute
   '/risk-prediction': typeof RiskPredictionRoute
@@ -207,6 +216,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/decisions'
     | '/executive'
+    | '/login'
     | '/operations'
     | '/reports'
     | '/risk-prediction'
@@ -229,6 +239,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/decisions'
     | '/executive'
+    | '/login'
     | '/reports'
     | '/risk-prediction'
     | '/settings'
@@ -250,6 +261,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/decisions'
     | '/executive'
+    | '/login'
     | '/operations'
     | '/reports'
     | '/risk-prediction'
@@ -273,6 +285,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   DecisionsRoute: typeof DecisionsRoute
   ExecutiveRoute: typeof ExecutiveRoute
+  LoginRoute: typeof LoginRoute
   OperationsRoute: typeof OperationsRouteWithChildren
   ReportsRoute: typeof ReportsRoute
   RiskPredictionRoute: typeof RiskPredictionRoute
@@ -315,6 +328,13 @@ declare module '@tanstack/react-router' {
       path: '/operations'
       fullPath: '/operations'
       preLoaderRoute: typeof OperationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/executive': {
@@ -459,6 +479,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   DecisionsRoute: DecisionsRoute,
   ExecutiveRoute: ExecutiveRoute,
+  LoginRoute: LoginRoute,
   OperationsRoute: OperationsRouteWithChildren,
   ReportsRoute: ReportsRoute,
   RiskPredictionRoute: RiskPredictionRoute,

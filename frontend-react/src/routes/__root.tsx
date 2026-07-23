@@ -133,8 +133,9 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isLanding = pathname === "/";
+  const isLogin = pathname === "/login";
   const isOps = pathname === "/operations" || pathname.startsWith("/operations/");
-  const hideChrome = isLanding || isOps;
+  const hideChrome = isLanding || isLogin || isOps;
 
   return (
     <QueryClientProvider client={queryClient}>

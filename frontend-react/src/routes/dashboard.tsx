@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { getUser } from "@/lib/auth";
 import { motion } from "framer-motion";
 import {
   Area,
@@ -40,6 +41,9 @@ import {
 } from "@/lib/mockData";
 
 export const Route = createFileRoute("/dashboard")({
+  beforeLoad: () => {
+    if (!getUser()) throw redirect({ to: "/login" });
+  },
   head: () => ({
     meta: [
       { title: "Executive Dashboard — Compliance Sentinel AI" },
