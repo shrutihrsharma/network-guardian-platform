@@ -240,7 +240,7 @@ function Landing() {
           >
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
             <div className="flex items-center gap-3">
-              <div className="grid h-11 w-11 place-items-center rounded-xl bg-primary/10 text-primary border border-primary/30">
+              <div className="grid h-11 w-11 place-items-center rounded-xl gold-gradient text-primary-foreground shadow-lg shadow-primary/20">
                 <Layers className="h-5 w-5" />
               </div>
             </div>
@@ -276,9 +276,8 @@ function Landing() {
             </Link> */}
             <a
               href="https://intelligent-perception-production-f1bc.up.railway.app/dashboard"
-              target="_blank"
               rel="noopener noreferrer"
-              className="mt-7 inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/15"
+              className="mt-7 inline-flex items-center gap-2 rounded-lg gold-gradient px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 hover:opacity-95"
             >
               Operational Dashboard
               <ArrowRight className="h-4 w-4" />
