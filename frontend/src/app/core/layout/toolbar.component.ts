@@ -98,8 +98,8 @@ import { AuthService } from '../../core/services/auth.service';
     }
 
     .toolbar__brand-icon {
-      width: 2.25rem;
-      height: 2.25rem;
+      width: 2.6rem;
+      height: 2.6rem;
       border-radius: 0.6rem;
       display: grid;
       place-items: center;
