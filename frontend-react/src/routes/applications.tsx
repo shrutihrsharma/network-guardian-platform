@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowUpDown, Search, SlidersHorizontal, ChevronRight, Network } from "lucide-react";
@@ -21,7 +21,6 @@ export const Route = createFileRoute("/applications")({
 type SortKey = "name" | "riskScore" | "currentCompliance" | "predictedCompliance" | "aiConfidence";
 
 function ApplicationsPage() {
-  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [bu, setBu] = useState<string>("All");
   const [sort, setSort] = useState<SortKey>("riskScore");
@@ -29,7 +28,7 @@ function ApplicationsPage() {
 
   const openOps = (id: string) => {
     setSelectedAppId(id);
-    navigate({ to: "/operations" });
+    window.location.assign("https://intelligent-perception-production-f1bc.up.railway.app/dashboard");
   };
 
   const rows = useMemo(() => {
