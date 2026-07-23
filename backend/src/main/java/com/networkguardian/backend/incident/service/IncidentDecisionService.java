@@ -35,7 +35,7 @@ public class IncidentDecisionService implements AIDecisionModule {
     public IncidentDecisionService(
             IncidentContextBuilder incidentContextBuilder,
             PromptBuilder promptBuilder,
-            @Qualifier("groqClient") AIClient aiClient,
+            @Qualifier("vertexAiClient") AIClient aiClient,
             ObjectMapper objectMapper,
             DecisionAuditService decisionAuditService
     ) {

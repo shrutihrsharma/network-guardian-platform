@@ -121,6 +121,7 @@ public class DataLoader {
                 incidentRAGService.embedAndSave(h);
             } catch (Exception e) {
                 log.warn("RAG: failed to embed historical incident {}: {}", h.getId(), e.getMessage());
+                log.warn("RAG: root cause", e);
             }
         });
         log.info("RAG: embedding backfill complete.");

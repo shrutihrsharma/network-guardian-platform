@@ -36,7 +36,7 @@ public class LifecycleDecisionService implements AIDecisionModule {
     public LifecycleDecisionService(
             LifecycleContextBuilder contextBuilder,
             LifecyclePromptBuilder promptBuilder,
-            @Qualifier("groqClient") AIClient aiClient,
+            @Qualifier("vertexAiClient") AIClient aiClient,
             ObjectMapper objectMapper,
             DecisionAuditService decisionAuditService) {
         this.contextBuilder = contextBuilder;

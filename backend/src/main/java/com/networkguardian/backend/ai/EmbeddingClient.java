@@ -4,59 +4,80 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.auth.oauth2.GoogleCredentials;
 
 @Component
 public class EmbeddingClient {
 
-    // Groq doesn't support embeddings — use OpenAI-compatible endpoint via a free provider.
-    // Defaults to a local nomic-embed model via Ollama if no override is set.
-    private static final String DEFAULT_EMBEDDING_URL = "http://localhost:11434/v1";
-    private static final String DEFAULT_EMBEDDING_MODEL = "nomic-embed-text";
+    private static final String DEFAULT_EMBEDDING_MODEL = "text-embedding-004";
 
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
     private final String model;
-    private final String apiKey;
+    private final String projectId;
+    private final String location;
 
     public EmbeddingClient(
-            @Value("${rag.embedding.base-url:" + DEFAULT_EMBEDDING_URL + "}") String baseUrl,
+            @Value("${gcp.project-id}") String projectId,
+            @Value("${gcp.location:us-central1}") String location,
             @Value("${rag.embedding.model:" + DEFAULT_EMBEDDING_MODEL + "}") String model,
-            @Value("${rag.embedding.api-key:ollama}") String apiKey,
             ObjectMapper objectMapper) {
+        this.projectId = projectId;
+        this.location = location;
         this.model = model;
-        this.apiKey = apiKey;
         this.objectMapper = objectMapper;
+        
+        String baseUrl = String.format("https://%s-aiplatform.googleapis.com", location);
         this.restClient = RestClient.builder().baseUrl(baseUrl).build();
     }
 
     public List<Double> embed(String text) {
-        Map<String, Object> body = Map.of("model", model, "input", text);
+        try {
+            // Fetch the access token using Application Default Credentials
+            GoogleCredentials credentials = GoogleCredentials.getApplicationDefault()
+                    .createScoped("https://www.googleapis.com/auth/cloud-platform");
+            credentials.refreshIfExpired();
+            String accessToken = credentials.getAccessToken().getTokenValue();
 
-        String raw = restClient.post()
-                .uri("/embeddings")
-                .header("Authorization", "Bearer " + apiKey)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(body)
-                .retrieve()
-                .body(String.class);
+            Map<String, Object> instance = Map.of("content", text);
+            Map<String, Object> body = Map.of("instances", List.of(instance));
 
-        return parseEmbedding(raw);
+            String uri = String.format("/v1/projects/%s/locations/%s/publishers/google/models/%s:predict", 
+                    projectId, location, model);
+
+            String raw = restClient.post()
+                    .uri(uri)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(body)
+                    .retrieve()
+                    .body(String.class);
+
+            return parseEmbedding(raw);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to call Vertex AI Embedding API", e);
+        }
     }
 
     @SuppressWarnings("null")
     private List<Double> parseEmbedding(String raw) {
         try {
             JsonNode root = objectMapper.readTree(raw);
-            JsonNode vector = root.path("data").get(0).path("embedding");
-            return objectMapper.readerForListOf(Double.class).readValue(vector);
+            JsonNode predictions = root.path("predictions");
+            if (predictions.isArray() && !predictions.isEmpty()) {
+                JsonNode values = predictions.get(0).path("embeddings").path("values");
+                return objectMapper.readerForListOf(Double.class).readValue(values);
+            }
+            throw new RuntimeException("No predictions found in response");
         } catch (Exception e) {
-            throw new RuntimeException("Failed to parse embedding response: " + raw, e);
+            throw new RuntimeException("Failed to parse Vertex AI embedding response: " + raw, e);
         }
     }
 }
