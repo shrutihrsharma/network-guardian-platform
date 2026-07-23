@@ -81,7 +81,7 @@ import { environment } from '../../../environments/environment';
   `,
   styles: `
     .top-toolbar {
-      height: 64px;
+      min-height: 132px;
       padding: 0 1.5rem;
       background: var(--app-surface);
       color: var(--app-text);
@@ -97,7 +97,7 @@ import { environment } from '../../../environments/environment';
     .toolbar__brand {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 1rem;
       min-width: 0;
       flex-shrink: 0;
     }
@@ -113,8 +113,8 @@ import { environment } from '../../../environments/environment';
     }
 
     .toolbar__brand-icon {
-      width: 2.6rem;
-      height: 2.6rem;
+      width: 6.75rem;
+      height: 6.75rem;
       border-radius: 0.6rem;
       display: grid;
       place-items: center;

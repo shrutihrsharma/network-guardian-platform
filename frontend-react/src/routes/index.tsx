@@ -130,11 +130,11 @@ function Landing() {
 
       {/* Nav */}
       <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <img
             src="/assets/logo.svg"
             alt="Sentinel AI logo"
-            className="h-10 w-10 rounded-xl object-contain"
+            className="h-[7.5rem] w-[7.5rem] rounded-xl object-contain"
           />
           <div className="min-w-0">
             <div className="text-[13px] font-semibold tracking-wide text-foreground">
@@ -159,13 +159,6 @@ function Landing() {
             Benefits
           </a>
         </nav>
-        <Link
-          to="/executive"
-          className="inline-flex items-center gap-2 rounded-lg gold-gradient px-4 py-2 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-95"
-        >
-          Launch Platform
-          <ArrowRight className="h-4 w-4" />
-        </Link>
       </header>
 
       {/* Hero */}
