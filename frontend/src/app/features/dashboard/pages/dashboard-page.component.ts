@@ -42,6 +42,75 @@ interface DashboardRecommendation {
         <app-metric-card title="Overall Compliance" [value]="complianceValue()" icon="verified_user" />
       </section>
 
+      <section class="diagram-section" aria-label="Network Guardian architecture summary">
+        <div class="diagram-card">
+          <div class="section-heading">
+            <h2>Network Guardian Architecture</h2>
+            <p>Visual summary of the frontend, backend decision agents, RAG retrieval, and AI provider flow.</p>
+          </div>
+          <div class="architecture-diagram" role="img" aria-label="Network Guardian architecture diagram">
+            <svg viewBox="0 0 1020 480" preserveAspectRatio="xMidYMid meet">
+              <defs>
+                <marker id="arrow" markerWidth="10" markerHeight="10" refX="6" refY="5" orient="auto" markerUnits="strokeWidth">
+                  <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
+                </marker>
+              </defs>
+
+              <rect x="40" y="24" width="260" height="84" rx="16" fill="rgba(56, 114, 255, 0.12)" stroke="rgba(56, 114, 255, 0.38)" stroke-width="2" />
+              <text x="170" y="48" text-anchor="middle" font-size="15" font-weight="700" fill="#111827">Frontend UI</text>
+              <text x="170" y="68" text-anchor="middle" font-size="12" fill="#4b5563">Angular dashboard & incident workspace</text>
+
+              <rect x="360" y="24" width="300" height="84" rx="16" fill="rgba(16, 185, 129, 0.12)" stroke="rgba(16, 185, 129, 0.38)" stroke-width="2" />
+              <text x="510" y="44" text-anchor="middle" font-size="15" font-weight="700" fill="#111827">Backend REST API</text>
+              <text x="510" y="64" text-anchor="middle" font-size="12" fill="#4b5563">Controllers route requests to decision modules</text>
+
+              <line x1="300" y1="66" x2="360" y2="66" stroke="rgba(107, 114, 128, 0.65)" stroke-width="2" marker-end="url(#arrow)" />
+
+              <rect x="80" y="140" width="260" height="138" rx="16" fill="rgba(248, 113, 113, 0.12)" stroke="rgba(248, 113, 113, 0.38)" stroke-width="2" />
+              <text x="210" y="168" text-anchor="middle" font-size="14" font-weight="700" fill="#111827">Decision Engines</text>
+              <text x="210" y="188" text-anchor="middle" font-size="11" fill="#4b5563">Incident / Compliance / Lifecycle / Security</text>
+              <text x="210" y="206" text-anchor="middle" font-size="11" fill="#4b5563">AI decision orchestration services</text>
+
+              <rect x="400" y="140" width="260" height="138" rx="16" fill="rgba(59, 130, 246, 0.12)" stroke="rgba(59, 130, 246, 0.38)" stroke-width="2" />
+              <text x="530" y="168" text-anchor="middle" font-size="14" font-weight="700" fill="#111827">Context & Prompt</text>
+              <text x="530" y="188" text-anchor="middle" font-size="11" fill="#4b5563">PromptBuilder + IncidentContextBuilder</text>
+              <text x="530" y="206" text-anchor="middle" font-size="11" fill="#4b5563">Builds incident, device, runbook, history</text>
+
+              <rect x="720" y="140" width="260" height="138" rx="16" fill="rgba(168, 85, 247, 0.12)" stroke="rgba(168, 85, 247, 0.38)" stroke-width="2" />
+              <text x="850" y="168" text-anchor="middle" font-size="14" font-weight="700" fill="#111827">RAG & Data</text>
+              <text x="850" y="188" text-anchor="middle" font-size="11" fill="#4b5563">RAGRetrievalService + MongoDB</text>
+              <text x="850" y="206" text-anchor="middle" font-size="11" fill="#4b5563">Enterprise knowledge, runbooks, audits</text>
+
+              <line x1="510" y1="108" x2="510" y2="140" stroke="rgba(107, 114, 128, 0.65)" stroke-width="2" marker-end="url(#arrow)" />
+
+              <line x1="230" y1="264" x2="230" y2="294" stroke="rgba(107, 114, 128, 0.65)" stroke-width="2" marker-end="url(#arrow)" />
+              <line x1="530" y1="264" x2="530" y2="294" stroke="rgba(107, 114, 128, 0.65)" stroke-width="2" marker-end="url(#arrow)" />
+              <line x1="850" y1="264" x2="850" y2="294" stroke="rgba(107, 114, 128, 0.65)" stroke-width="2" marker-end="url(#arrow)" />
+
+              <rect x="200" y="304" width="250" height="108" rx="16" fill="rgba(251, 191, 36, 0.12)" stroke="rgba(251, 191, 36, 0.38)" stroke-width="2" />
+              <text x="325" y="332" text-anchor="middle" font-size="14" font-weight="700" fill="#111827">AI Clients</text>
+              <text x="325" y="352" text-anchor="middle" font-size="11" fill="#4b5563">GroqClient (active), OpenRouterClient, GeminiClient</text>
+
+              <rect x="560" y="304" width="260" height="108" rx="16" fill="rgba(34, 197, 94, 0.12)" stroke="rgba(34, 197, 94, 0.38)" stroke-width="2" />
+              <text x="690" y="332" text-anchor="middle" font-size="14" font-weight="700" fill="#111827">External LLMs</text>
+              <text x="690" y="352" text-anchor="middle" font-size="11" fill="#4b5563">GROQ / OpenRouter / Gemini endpoints</text>
+
+              <line x1="450" y1="358" x2="560" y2="358" stroke="rgba(107, 114, 128, 0.65)" stroke-width="2" marker-end="url(#arrow)" />
+            </svg>
+          </div>
+          <div class="diagram-legend">
+            <div>
+              <strong>Backend decision agents</strong>
+              <p>Incident, Compliance, Lifecycle, Security modules all route through AI client adapters.</p>
+            </div>
+            <div>
+              <strong>RAG & enterprise knowledge</strong>
+              <p>RAGRetrievalService gathers runbooks and knowledge docs from Mongo to enrich AI prompts.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="table-section">
         <div class="section-heading">
           <h2>Recent AI Recommendations</h2>
