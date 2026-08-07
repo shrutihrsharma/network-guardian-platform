@@ -45,68 +45,35 @@ interface DashboardRecommendation {
       <section class="diagram-section" aria-label="Network Guardian architecture summary">
         <div class="diagram-card">
           <div class="section-heading">
-            <h2>Network Guardian Architecture</h2>
-            <p>Visual summary of the frontend, backend decision agents, RAG retrieval, and AI provider flow.</p>
+            <h2>How Network Guardian works</h2>
+            <p>From incident capture to AI-backed recommendation, the platform combines live context, knowledge, and model insight.</p>
           </div>
-          <div class="architecture-diagram" role="img" aria-label="Network Guardian architecture diagram">
-            <svg viewBox="0 0 1020 480" preserveAspectRatio="xMidYMid meet">
-              <defs>
-                <marker id="arrow" markerWidth="10" markerHeight="10" refX="6" refY="5" orient="auto" markerUnits="strokeWidth">
-                  <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
-                </marker>
-              </defs>
 
-              <rect x="40" y="24" width="260" height="84" rx="16" fill="rgba(56, 114, 255, 0.12)" stroke="rgba(56, 114, 255, 0.38)" stroke-width="2" />
-              <text x="170" y="48" text-anchor="middle" font-size="15" font-weight="700" fill="#111827">Frontend UI</text>
-              <text x="170" y="68" text-anchor="middle" font-size="12" fill="#4b5563">Angular dashboard & incident workspace</text>
-
-              <rect x="360" y="24" width="300" height="84" rx="16" fill="rgba(16, 185, 129, 0.12)" stroke="rgba(16, 185, 129, 0.38)" stroke-width="2" />
-              <text x="510" y="44" text-anchor="middle" font-size="15" font-weight="700" fill="#111827">Backend REST API</text>
-              <text x="510" y="64" text-anchor="middle" font-size="12" fill="#4b5563">Controllers route requests to decision modules</text>
-
-              <line x1="300" y1="66" x2="360" y2="66" stroke="rgba(107, 114, 128, 0.65)" stroke-width="2" marker-end="url(#arrow)" />
-
-              <rect x="80" y="140" width="260" height="138" rx="16" fill="rgba(248, 113, 113, 0.12)" stroke="rgba(248, 113, 113, 0.38)" stroke-width="2" />
-              <text x="210" y="168" text-anchor="middle" font-size="14" font-weight="700" fill="#111827">Decision Engines</text>
-              <text x="210" y="188" text-anchor="middle" font-size="11" fill="#4b5563">Incident / Compliance / Lifecycle / Security</text>
-              <text x="210" y="206" text-anchor="middle" font-size="11" fill="#4b5563">AI decision orchestration services</text>
-
-              <rect x="400" y="140" width="260" height="138" rx="16" fill="rgba(59, 130, 246, 0.12)" stroke="rgba(59, 130, 246, 0.38)" stroke-width="2" />
-              <text x="530" y="168" text-anchor="middle" font-size="14" font-weight="700" fill="#111827">Context & Prompt</text>
-              <text x="530" y="188" text-anchor="middle" font-size="11" fill="#4b5563">PromptBuilder + IncidentContextBuilder</text>
-              <text x="530" y="206" text-anchor="middle" font-size="11" fill="#4b5563">Builds incident, device, runbook, history</text>
-
-              <rect x="720" y="140" width="260" height="138" rx="16" fill="rgba(168, 85, 247, 0.12)" stroke="rgba(168, 85, 247, 0.38)" stroke-width="2" />
-              <text x="850" y="168" text-anchor="middle" font-size="14" font-weight="700" fill="#111827">RAG & Data</text>
-              <text x="850" y="188" text-anchor="middle" font-size="11" fill="#4b5563">RAGRetrievalService + MongoDB</text>
-              <text x="850" y="206" text-anchor="middle" font-size="11" fill="#4b5563">Enterprise knowledge, runbooks, audits</text>
-
-              <line x1="510" y1="108" x2="510" y2="140" stroke="rgba(107, 114, 128, 0.65)" stroke-width="2" marker-end="url(#arrow)" />
-
-              <line x1="230" y1="264" x2="230" y2="294" stroke="rgba(107, 114, 128, 0.65)" stroke-width="2" marker-end="url(#arrow)" />
-              <line x1="530" y1="264" x2="530" y2="294" stroke="rgba(107, 114, 128, 0.65)" stroke-width="2" marker-end="url(#arrow)" />
-              <line x1="850" y1="264" x2="850" y2="294" stroke="rgba(107, 114, 128, 0.65)" stroke-width="2" marker-end="url(#arrow)" />
-
-              <rect x="200" y="304" width="250" height="108" rx="16" fill="rgba(251, 191, 36, 0.12)" stroke="rgba(251, 191, 36, 0.38)" stroke-width="2" />
-              <text x="325" y="332" text-anchor="middle" font-size="14" font-weight="700" fill="#111827">AI Clients</text>
-              <text x="325" y="352" text-anchor="middle" font-size="11" fill="#4b5563">GroqClient (active), OpenRouterClient, GeminiClient</text>
-
-              <rect x="560" y="304" width="260" height="108" rx="16" fill="rgba(34, 197, 94, 0.12)" stroke="rgba(34, 197, 94, 0.38)" stroke-width="2" />
-              <text x="690" y="332" text-anchor="middle" font-size="14" font-weight="700" fill="#111827">External LLMs</text>
-              <text x="690" y="352" text-anchor="middle" font-size="11" fill="#4b5563">GROQ / OpenRouter / Gemini endpoints</text>
-
-              <line x1="450" y1="358" x2="560" y2="358" stroke="rgba(107, 114, 128, 0.65)" stroke-width="2" marker-end="url(#arrow)" />
-            </svg>
+          <div class="diagram-flow">
+            <div class="diagram-step step-console">
+              <div class="step-title">1. Incident in dashboard</div>
+              <div class="step-copy">Operator sees a flagged incident and review summary details.</div>
+            </div>
+            <div class="diagram-step step-engine">
+              <div class="step-title">2. Context assembled</div>
+              <div class="step-copy">Device, runbook, and historical incident context are collected.</div>
+            </div>
+            <div class="diagram-step step-knowledge">
+              <div class="step-title">3. Knowledge enriched</div>
+              <div class="step-copy">Relevant runbooks and enterprise guidance are added to the request.</div>
+            </div>
+            <div class="diagram-step step-model">
+              <div class="step-title">4. AI recommendation</div>
+              <div class="step-copy">The prompt is sent to the active AI provider for a guided decision.</div>
+            </div>
+            <div class="diagram-step step-output">
+              <div class="step-title">5. Recommendation returned</div>
+              <div class="step-copy">The suggested action appears in the dashboard and is stored for audit.</div>
+            </div>
           </div>
-          <div class="diagram-legend">
-            <div>
-              <strong>Backend decision agents</strong>
-              <p>Incident, Compliance, Lifecycle, Security modules all route through AI client adapters.</p>
-            </div>
-            <div>
-              <strong>RAG & enterprise knowledge</strong>
-              <p>RAGRetrievalService gathers runbooks and knowledge docs from Mongo to enrich AI prompts.</p>
-            </div>
+
+          <div class="diagram-note">
+            Network Guardian uses live incident data plus stored knowledge to generate explainable guidance from the chosen AI provider.
           </div>
         </div>
       </section>
@@ -235,6 +202,90 @@ interface DashboardRecommendation {
       border: 1px solid var(--app-border);
       border-radius: 999px;
       background: var(--app-card-bg);
+    }
+
+    .diagram-section {
+      display: flex;
+      justify-content: center;
+    }
+
+    .diagram-card {
+      width: 100%;
+      background: var(--app-surface);
+      border: 1px solid var(--app-border);
+      border-radius: var(--app-radius-lg);
+      padding: 1.35rem;
+      box-shadow: 0 24px 50px rgba(15, 23, 42, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .diagram-flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 1rem;
+      align-items: stretch;
+    }
+
+    .diagram-step {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 112px;
+      padding: 1rem;
+      border-radius: var(--app-radius-md);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.95));
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+      gap: 0.4rem;
+    }
+
+    .step-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--app-text);
+    }
+
+    .step-copy {
+      font-size: 0.84rem;
+      color: var(--app-text-muted);
+      line-height: 1.5;
+    }
+
+    .step-console {
+      background: linear-gradient(180deg, rgba(59, 130, 246, 0.14), rgba(255, 255, 255, 0.95));
+      border-color: rgba(59, 130, 246, 0.32);
+    }
+
+    .step-engine {
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.14), rgba(255, 255, 255, 0.95));
+      border-color: rgba(16, 185, 129, 0.32);
+    }
+
+    .step-knowledge {
+      background: linear-gradient(180deg, rgba(249, 115, 22, 0.14), rgba(255, 255, 255, 0.95));
+      border-color: rgba(249, 115, 22, 0.32);
+    }
+
+    .step-model {
+      background: linear-gradient(180deg, rgba(168, 85, 247, 0.14), rgba(255, 255, 255, 0.95));
+      border-color: rgba(168, 85, 247, 0.32);
+    }
+
+    .step-output {
+      background: linear-gradient(180deg, rgba(234, 179, 8, 0.14), rgba(255, 255, 255, 0.95));
+      border-color: rgba(234, 179, 8, 0.32);
+    }
+
+    .diagram-note {
+      padding: 1rem;
+      border-radius: var(--app-radius-md);
+      background: rgba(15, 23, 42, 0.03);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      color: var(--app-text-muted);
+      font-size: 0.85rem;
+      line-height: 1.55;
     }
 
     .empty-state {
