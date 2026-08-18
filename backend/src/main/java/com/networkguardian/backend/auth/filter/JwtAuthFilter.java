@@ -18,11 +18,18 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
+    private static final boolean AUTH_DISABLED = true;
+
     private final GoogleTokenVerifierService googleTokenVerifierService;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
+        // Temporary maintenance mode: bypass token validation until Google login is restored.
+        if (AUTH_DISABLED) {
+            return true;
+        }
+
         // Skip auth filter for auth endpoints, actuator, and preflight CORS requests
         return path.startsWith("/api/auth/")
                 || path.startsWith("/actuator/")
@@ -33,6 +40,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
+
+        if (AUTH_DISABLED) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         String authHeader = request.getHeader("Authorization");
 
