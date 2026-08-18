@@ -16,13 +16,16 @@ const STORAGE_KEY_USER = 'ng_auth_user';
 export class AuthService {
   private readonly userSignal = signal<UserProfile | null>(this.loadUserFromStorage());
 
+  /** Temporary maintenance toggle while Google sign-in is paused. */
+  readonly googleLoginDisabled = true;
+
   /** Reactive error message for the login page to display */
   readonly loginError = signal<string | null>(null);
   /** Loading state during login */
   readonly isLoggingIn = signal(false);
 
   readonly user = this.userSignal.asReadonly();
-  readonly isAuthenticated = computed(() => this.userSignal() !== null);
+  readonly isAuthenticated = computed(() => this.userSignal() !== null || this.googleLoginDisabled);
 
   constructor(
     private readonly http: HttpClient,
