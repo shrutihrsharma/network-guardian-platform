@@ -16,6 +16,8 @@ declare global {
   }
 }
 
+const GOOGLE_LOGIN_DISABLED = true;
+
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Sign in · Network Guardian" }] }),
   component: LoginPage,
@@ -28,6 +30,11 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (GOOGLE_LOGIN_DISABLED) {
+      void navigate({ to: "/dashboard" });
+      return;
+    }
+
     if (getUser()) {
       void navigate({ to: "/dashboard" });
       return;
@@ -71,6 +78,31 @@ function LoginPage() {
     script.onload = initialize;
     document.head.appendChild(script);
   }, [navigate]);
+
+  if (GOOGLE_LOGIN_DISABLED) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-background px-6">
+        <section className="w-full max-w-md rounded-2xl border border-border/60 bg-card/80 p-8 text-center shadow-2xl backdrop-blur-xl">
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl gold-gradient text-primary-foreground">
+            <Network className="h-7 w-7" />
+          </div>
+          <p className="mt-5 text-xs font-medium uppercase tracking-[0.22em] text-primary">Platform · v2.0</p>
+          <h1 className="mt-3 font-display text-3xl font-semibold text-foreground">Google sign-in is paused</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Temporary maintenance is in progress. You can continue to the dashboard.</p>
+          <button
+            type="button"
+            onClick={() => void navigate({ to: "/dashboard" })}
+            className="mt-8 inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+          >
+            Continue to dashboard
+          </button>
+          <p className="mt-8 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+            <LockKeyhole className="h-3.5 w-3.5 text-primary" /> Sign-in will be re-enabled later
+          </p>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-6">

@@ -45,8 +45,19 @@
       </div>
     }
 
-    <!-- Google Sign-In button container -->
-    <div class="login-card__google-btn" [class.login-card__google-btn--hidden]="authService.isLoggingIn()" #googleBtn></div>
+    @if (googleLoginDisabled) {
+      <div class="login-card__error" style="background: rgba(255, 193, 7, 0.1); color: #f7d979; border: 1px solid rgba(255, 193, 7, 0.3);">
+        <span class="login-card__error-icon">⚠️</span>
+        Google sign-in is temporarily disabled. You can continue to the dashboard.
+      </div>
+
+      <button type="button" class="login-card__google-btn" (click)="continueToDashboard()" style="margin-top: 1rem; width: 100%;">
+        Continue to dashboard
+      </button>
+    } @else {
+      <!-- Google Sign-In button container -->
+      <div class="login-card__google-btn" [class.login-card__google-btn--hidden]="authService.isLoggingIn()" #googleBtn></div>
+    }
 
     <!-- Footer -->
     <div class="login-card__footer">

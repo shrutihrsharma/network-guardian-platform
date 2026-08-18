@@ -24,18 +24,33 @@ declare const google: any;
 export class LoginPageComponent implements OnInit, AfterViewInit {
   @ViewChild('googleBtn', { static: false }) googleBtn!: ElementRef;
 
+  readonly googleLoginDisabled = true;
   readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly ngZone = inject(NgZone);
 
   ngOnInit(): void {
+    // Temporary maintenance mode: skip Google login and go straight to dashboard.
+    if (this.googleLoginDisabled) {
+      this.continueToDashboard();
+      return;
+    }
+
     // If already authenticated, redirect to dashboard
     if (this.authService.isAuthenticated()) {
-      this.router.navigate(['/dashboard']);
+      this.continueToDashboard();
     }
   }
 
+  continueToDashboard(): void {
+    this.router.navigate(['/dashboard']);
+  }
+
   ngAfterViewInit(): void {
+    if (this.googleLoginDisabled) {
+      return;
+    }
+
     this.initializeGoogleSignIn();
   }
 

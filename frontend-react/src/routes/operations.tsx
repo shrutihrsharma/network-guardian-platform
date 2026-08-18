@@ -17,8 +17,11 @@ import {
 import { getApp, getSelectedAppId, opsApps, setSelectedAppId } from "@/lib/opsData";
 import { getUser } from "@/lib/auth";
 
+const GOOGLE_LOGIN_DISABLED = true;
+
 export const Route = createFileRoute("/operations")({
   beforeLoad: () => {
+    if (GOOGLE_LOGIN_DISABLED) return;
     if (!getUser()) throw redirect({ to: "/login" });
   },
   head: () => ({

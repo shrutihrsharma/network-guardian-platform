@@ -40,8 +40,11 @@ import {
   upcomingAudits,
 } from "@/lib/mockData";
 
+const GOOGLE_LOGIN_DISABLED = true;
+
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: () => {
+    if (GOOGLE_LOGIN_DISABLED) return;
     if (!getUser()) throw redirect({ to: "/login" });
   },
   head: () => ({
