@@ -254,35 +254,35 @@ interface DashboardRecommendation {
     }
 
     .step-console {
-      background: linear-gradient(180deg, rgba(59, 130, 246, 0.14), rgba(255, 255, 255, 0.95));
-      border-color: rgba(59, 130, 246, 0.32);
+      background: linear-gradient(180deg, var(--diagram-console-1), var(--diagram-console-2));
+      border-color: var(--diagram-console-border);
     }
 
     .step-engine {
-      background: linear-gradient(180deg, rgba(16, 185, 129, 0.14), rgba(255, 255, 255, 0.95));
-      border-color: rgba(16, 185, 129, 0.32);
+      background: linear-gradient(180deg, var(--diagram-engine-1), var(--diagram-engine-2));
+      border-color: var(--diagram-engine-border);
     }
 
     .step-knowledge {
-      background: linear-gradient(180deg, rgba(249, 115, 22, 0.14), rgba(255, 255, 255, 0.95));
-      border-color: rgba(249, 115, 22, 0.32);
+      background: linear-gradient(180deg, var(--diagram-knowledge-1), var(--diagram-knowledge-2));
+      border-color: var(--diagram-knowledge-border);
     }
 
     .step-model {
-      background: linear-gradient(180deg, rgba(168, 85, 247, 0.14), rgba(255, 255, 255, 0.95));
-      border-color: rgba(168, 85, 247, 0.32);
+      background: linear-gradient(180deg, var(--diagram-model-1), var(--diagram-model-2));
+      border-color: var(--diagram-model-border);
     }
 
     .step-output {
-      background: linear-gradient(180deg, rgba(234, 179, 8, 0.14), rgba(255, 255, 255, 0.95));
-      border-color: rgba(234, 179, 8, 0.32);
+      background: linear-gradient(180deg, var(--diagram-output-1), var(--diagram-output-2));
+      border-color: var(--diagram-output-border);
     }
 
     .diagram-note {
       padding: 1rem;
       border-radius: var(--app-radius-md);
-      background: rgba(15, 23, 42, 0.03);
-      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: var(--app-surface-mid);
+      border: 1px solid var(--app-border);
       color: var(--app-text-muted);
       font-size: 0.85rem;
       line-height: 1.55;

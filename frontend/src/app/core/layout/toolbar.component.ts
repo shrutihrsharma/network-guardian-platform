@@ -36,6 +36,10 @@ import { environment } from '../../../environments/environment';
 
       <span class="toolbar__spacer"></span>
 
+      <button mat-icon-button class="toolbar__icon-btn" aria-label="Toggle color theme" (click)="toggleTheme()">
+        <mat-icon>{{ themeMode() === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
+      </button>
+
       <button mat-icon-button class="toolbar__icon-btn" aria-label="Notifications">
         <mat-icon>notifications_none</mat-icon>
       </button>
@@ -329,6 +333,7 @@ import { environment } from '../../../environments/environment';
 export class ToolbarComponent {
   private readonly authService = inject(AuthService);
   readonly landingPageUrl = environment.frontendReactLandingUrl;
+  readonly themeMode = signal<'dark' | 'light'>(this.getInitialTheme());
 
   readonly userName = computed(() => this.authService.user()?.name ?? 'User');
   readonly userEmail = computed(() => this.authService.user()?.email ?? '');
@@ -343,7 +348,35 @@ export class ToolbarComponent {
     return name.substring(0, 2).toUpperCase();
   });
 
-  onSignOut(): void {
+  constructor() {
+    this.applyTheme(this.themeMode());
+  }
+
+  protected toggleTheme(): void {
+    const nextMode = this.themeMode() === 'dark' ? 'light' : 'dark';
+    this.applyTheme(nextMode);
+  }
+
+  protected onSignOut(): void {
     this.authService.logout();
+  }
+
+  private getInitialTheme(): 'dark' | 'light' {
+    if (typeof window === 'undefined') {
+      return 'dark';
+    }
+
+    const savedTheme = localStorage.getItem('sentinel-theme');
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      return savedTheme;
+    }
+
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+
+  private applyTheme(mode: 'dark' | 'light'): void {
+    this.themeMode.set(mode);
+    document.documentElement.setAttribute('data-theme', mode);
+    localStorage.setItem('sentinel-theme', mode);
   }
 }
