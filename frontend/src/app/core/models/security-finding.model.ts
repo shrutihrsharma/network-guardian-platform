@@ -25,6 +25,41 @@ export interface SecurityFinding {
   createdAt: string;
 }
 
+export interface RemediationPlanOwner {
+  userId?: string;
+  name?: string;
+  team?: string;
+  reason?: string;
+  confidence?: number;
+}
+
+export interface RemediationPlan {
+  findingId: string;
+  title: string;
+  summary: string;
+  severity: string;
+  businessImpact: string;
+  rootCause: string;
+  remediationSteps: string[];
+  recommendedOwner: RemediationPlanOwner | null;
+  ownerReason: string;
+  estimatedEffort: string;
+  riskIfNotResolved: string;
+  confidence: number;
+  generatedAt: string;
+  provider?: string;
+  model?: string;
+}
+
+export interface JiraTicketResponse {
+  jiraKey: string;
+  jiraUrl: string;
+  status: 'CREATED' | 'ALREADY_EXISTS';
+  assignee?: string;
+  assigneeName?: string;
+  createdAt: string;
+}
+
 export interface SecurityFindingsFilters {
   vendor: string;
   region: string;

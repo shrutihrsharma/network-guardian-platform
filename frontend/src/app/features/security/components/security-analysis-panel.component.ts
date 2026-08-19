@@ -1,15 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, effect, input, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DecisionEvidenceItem, DecisionResponse } from '../../../core/models/decision-response.model';
 import { SecurityApiService } from '../../../core/services/security-api.service';
-import { SecurityFinding } from '../../../core/models/security-finding.model';
+import { JiraTicketResponse, RemediationPlan, SecurityFinding } from '../../../core/models/security-finding.model';
 
 @Component({
   selector: 'app-security-analysis-panel',
   standalone: true,
-  imports: [MatButtonModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [DatePipe, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
   template: `
     <aside class="panel">
       <div class="panel-head">
@@ -69,6 +70,62 @@ import { SecurityFinding } from '../../../core/models/security-finding.model';
             <div class="detail-row detail-row--compact"><span>Automation Available</span><strong>{{ automationLabel() }}</strong></div>
           </section>
 
+          @if (remediationPlan(); as plan) {
+            <section class="panel-section remediation-plan">
+              <h4>AI Remediation Plan</h4>
+              <div class="detail-row detail-row--stacked"><span>Summary</span><p class="placeholder-copy">{{ plan.summary }}</p></div>
+              <div class="detail-row detail-row--stacked"><span>Root Cause</span><p class="placeholder-copy">{{ plan.rootCause }}</p></div>
+              <div class="detail-row detail-row--stacked"><span>Business Impact</span><p class="placeholder-copy">{{ plan.businessImpact }}</p></div>
+              <div class="detail-row detail-row--stacked">
+                <span>Recommended Actions</span>
+                <ol class="plan-steps">
+                  @for (step of plan.remediationSteps; track step) { <li>{{ step }}</li> }
+                </ol>
+              </div>
+              <div class="detail-row detail-row--stacked">
+                <span>Recommended Owner</span>
+                @if (plan.recommendedOwner; as owner) {
+                  <strong>{{ owner.name || owner.team || owner.userId }}</strong>
+                } @else {
+                  <strong class="owner-unavailable">Owner recommendation unavailable — insufficient historical evidence.</strong>
+                }
+              </div>
+              <div class="detail-row detail-row--stacked"><span>Why this owner?</span><p class="placeholder-copy">{{ plan.ownerReason }}</p></div>
+              <div class="detail-row"><span>Estimated Effort</span><strong>{{ plan.estimatedEffort }}</strong></div>
+              <div class="detail-row detail-row--stacked"><span>Risk if not resolved</span><p class="placeholder-copy">{{ plan.riskIfNotResolved }}</p></div>
+              <div class="detail-row"><span>AI Confidence</span><strong>{{ plan.confidence }}%</strong></div>
+              <div class="detail-row"><span>Generated</span><strong>{{ plan.generatedAt | date: 'medium' }}</strong></div>
+              @if (jiraTicket(); as ticket) {
+                <div class="jira-created">
+                  <strong>✓ Jira Ticket Created</strong>
+                  <a [href]="ticket.jiraUrl" target="_blank" rel="noopener">{{ ticket.jiraKey }}</a>
+                  <span>Assigned to: {{ ticket.assigneeName || ticket.assignee || 'Unassigned' }}</span>
+                  <a class="jira-link" [href]="ticket.jiraUrl" target="_blank" rel="noopener">Open in Jira</a>
+                </div>
+              } @else if (jiraConfirmation()) {
+                <div class="jira-confirmation">
+                  <strong>Create a Jira remediation ticket for this finding?</strong>
+                  <div class="jira-preview">
+                    <span>Title: {{ plan.title }}</span>
+                    <span>Priority: {{ jiraPriority(plan.severity) }}</span>
+                    <span>Recommended owner: {{ plan.recommendedOwner?.name || plan.recommendedOwner?.team || 'Unassigned' }}</span>
+                    <span>Remediation steps: {{ plan.remediationSteps.length }}</span>
+                  </div>
+                  <div class="jira-confirmation-actions">
+                    <button mat-stroked-button class="secondary-action" type="button" (click)="cancelJiraCreation()">Cancel</button>
+                    <button mat-flat-button class="primary-action" type="button" [disabled]="jiraLoading()" (click)="createJiraTicket()">
+                      @if (jiraLoading()) { <mat-spinner diameter="16" /> Creating... } @else { Create Ticket }
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <button mat-stroked-button class="secondary-action jira-action" type="button" (click)="requestJiraCreation()">
+                  Create Jira Ticket
+                </button>
+              }
+            </section>
+          }
+
           <section class="panel-section">
             <h4>Supporting Knowledge</h4>
             @if (supportingEvidence().length) {
@@ -97,6 +154,9 @@ import { SecurityFinding } from '../../../core/models/security-finding.model';
                 } @else {
                   Analyze
                 }
+              </button>
+              <button mat-stroked-button class="secondary-action" type="button" [disabled]="planLoading()" (click)="generateRemediationPlan()">
+                @if (planLoading()) { <mat-spinner diameter="16" /> Generating... } @else { Generate Remediation Plan }
               </button>
               <button
                 mat-stroked-button
@@ -345,6 +405,71 @@ import { SecurityFinding } from '../../../core/models/security-finding.model';
       font-size: 0.85rem;
     }
 
+    .remediation-plan {
+      border-top-color: var(--app-primary);
+    }
+
+    .plan-steps {
+      margin: 0;
+      padding-left: 1.2rem;
+      color: var(--app-text-secondary);
+      font-size: 0.79rem;
+      line-height: 1.5;
+    }
+
+    .owner-unavailable {
+      color: var(--app-text-muted) !important;
+      text-align: left !important;
+      font-weight: 500 !important;
+    }
+
+    .jira-action {
+      margin-top: 0.2rem;
+      border-color: rgba(14, 165, 233, 0.5) !important;
+    }
+
+    .jira-confirmation,
+    .jira-created {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      padding: 0.65rem;
+      border: 1px solid var(--app-border);
+      border-radius: var(--app-radius-sm);
+      background: var(--app-surface-strong);
+      color: var(--app-text-secondary);
+      font-size: 0.78rem;
+    }
+
+    .jira-confirmation strong,
+    .jira-created strong {
+      color: var(--app-text);
+    }
+
+    .jira-preview {
+      display: grid;
+      gap: 0.2rem;
+      line-height: 1.35;
+    }
+
+    .jira-confirmation-actions {
+      display: flex;
+      gap: 0.45rem;
+    }
+
+    .jira-confirmation-actions button {
+      flex: 1;
+    }
+
+    .jira-created a {
+      color: var(--app-primary);
+      font-weight: 700;
+    }
+
+    .jira-link {
+      align-self: flex-start;
+    }
+
     .idle-state {
       display: flex;
       flex-direction: column;
@@ -377,6 +502,11 @@ export class SecurityAnalysisPanelComponent {
 
   protected readonly loading = signal(false);
   protected readonly result = signal<DecisionResponse | null>(null);
+  protected readonly remediationPlan = signal<RemediationPlan | null>(null);
+  protected readonly planLoading = signal(false);
+  protected readonly jiraLoading = signal(false);
+  protected readonly jiraConfirmation = signal(false);
+  protected readonly jiraTicket = signal<JiraTicketResponse | null>(null);
   protected readonly errorMsg = signal<string | null>(null);
   protected readonly simulationVisible = signal(false);
   protected readonly simulationRunning = signal(false);
@@ -410,8 +540,29 @@ export class SecurityAnalysisPanelComponent {
     effect(() => {
       this.finding();
       this.result.set(null);
+      this.remediationPlan.set(null);
+      this.jiraConfirmation.set(false);
+      this.jiraTicket.set(null);
       this.errorMsg.set(null);
       this.resetSimulation();
+    });
+  }
+
+  protected generateRemediationPlan(): void {
+    const selected = this.finding();
+    if (!selected) return;
+
+    this.planLoading.set(true);
+    this.errorMsg.set(null);
+    this.securityApiService.generateRemediationPlan(selected.id).subscribe({
+      next: (plan) => {
+        this.remediationPlan.set(plan);
+        this.planLoading.set(false);
+      },
+      error: (error: Error) => {
+        this.errorMsg.set(error.message || 'Unable to generate remediation plan.');
+        this.planLoading.set(false);
+      }
     });
   }
 
@@ -436,6 +587,43 @@ export class SecurityAnalysisPanelComponent {
         this.loading.set(false);
       }
     });
+  }
+
+  protected requestJiraCreation(): void {
+    if (this.remediationPlan()) {
+      this.jiraConfirmation.set(true);
+      this.errorMsg.set(null);
+    }
+  }
+
+  protected cancelJiraCreation(): void {
+    this.jiraConfirmation.set(false);
+  }
+
+  protected createJiraTicket(): void {
+    const selected = this.finding();
+    if (!selected || !this.remediationPlan() || this.jiraLoading()) return;
+
+    this.jiraLoading.set(true);
+    this.errorMsg.set(null);
+    this.securityApiService.createJiraTicket(selected.id).subscribe({
+      next: (ticket) => {
+        this.jiraTicket.set(ticket);
+        this.jiraConfirmation.set(false);
+        this.jiraLoading.set(false);
+      },
+      error: (error: Error) => {
+        this.errorMsg.set(error.message || 'Unable to create Jira ticket.');
+        this.jiraLoading.set(false);
+      }
+    });
+  }
+
+  protected jiraPriority(severity: string): string {
+    if (severity.toLowerCase() === 'critical') return 'Highest';
+    if (severity.toLowerCase() === 'high') return 'High';
+    if (severity.toLowerCase() === 'low') return 'Low';
+    return 'Medium';
   }
 
   protected simulateApplyRecommendation(): void {

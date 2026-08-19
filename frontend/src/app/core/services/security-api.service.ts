@@ -3,7 +3,7 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { catchError, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { DecisionResponse } from '../models/decision-response.model';
-import { SecurityFinding } from '../models/security-finding.model';
+import { JiraTicketResponse, RemediationPlan, SecurityFinding } from '../models/security-finding.model';
 
 @Injectable({ providedIn: 'root' })
 export class SecurityApiService {
@@ -45,6 +45,18 @@ export class SecurityApiService {
       .pipe(catchError(this.handleError));
   }
 
+  generateRemediationPlan(id: string) {
+    return this.http
+      .post<RemediationPlan>(`${this.base}/${id}/remediation-plan`, {})
+      .pipe(catchError(this.handleError));
+  }
+
+  createJiraTicket(id: string) {
+    return this.http
+      .post<JiraTicketResponse>(`${this.base}/${id}/remediation-plan/jira`, {})
+      .pipe(catchError(this.handleError));
+  }
+
   private handleError(error: HttpErrorResponse) {
     let message = 'Unable to load security findings.';
 
@@ -52,6 +64,8 @@ export class SecurityApiService {
       message = error.error.message;
     } else if (error.status === 404) {
       message = 'Security finding not found.';
+    } else if (typeof error.error?.message === 'string' && error.error.message.trim()) {
+      message = error.error.message;
     } else if (error.status) {
       message = `Request failed with status ${error.status}`;
     }

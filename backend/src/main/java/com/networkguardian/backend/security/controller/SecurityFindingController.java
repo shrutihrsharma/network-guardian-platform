@@ -13,6 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.networkguardian.backend.common.dto.DecisionRequest;
 import com.networkguardian.backend.common.dto.DecisionResponse;
 import com.networkguardian.backend.security.dto.SecurityFindingResponse;
+import com.networkguardian.backend.security.dto.RemediationPlan;
+import com.networkguardian.backend.security.service.RemediationPlanService;
+import com.networkguardian.backend.security.service.JiraIntegrationService;
+import com.networkguardian.backend.security.dto.JiraTicketResponse;
 import com.networkguardian.backend.security.service.SecurityDecisionService;
 import com.networkguardian.backend.security.service.SecurityFindingService;
 
@@ -22,12 +26,18 @@ public class SecurityFindingController {
 
     private final SecurityFindingService securityFindingService;
     private final SecurityDecisionService securityDecisionService;
+    private final RemediationPlanService remediationPlanService;
+    private final JiraIntegrationService jiraIntegrationService;
 
     public SecurityFindingController(
             SecurityFindingService securityFindingService,
-            SecurityDecisionService securityDecisionService) {
+            SecurityDecisionService securityDecisionService,
+            RemediationPlanService remediationPlanService,
+            JiraIntegrationService jiraIntegrationService) {
         this.securityFindingService = securityFindingService;
         this.securityDecisionService = securityDecisionService;
+        this.remediationPlanService = remediationPlanService;
+        this.jiraIntegrationService = jiraIntegrationService;
     }
 
     @GetMapping
@@ -61,6 +71,16 @@ public class SecurityFindingController {
                 .findingId(id)
                 .build();
         return ResponseEntity.ok(securityDecisionService.execute(request));
+    }
+
+    @PostMapping("/{id}/remediation-plan")
+    public ResponseEntity<RemediationPlan> generateRemediationPlan(@PathVariable String id) {
+        return ResponseEntity.ok(remediationPlanService.generate(id));
+    }
+
+    @PostMapping("/{id}/remediation-plan/jira")
+    public ResponseEntity<JiraTicketResponse> createJiraTicket(@PathVariable String id) {
+        return ResponseEntity.ok(jiraIntegrationService.createIssue(id));
     }
 }
 

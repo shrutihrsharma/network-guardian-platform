@@ -1,9 +1,12 @@
 package com.networkguardian.backend.common.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import com.networkguardian.backend.security.dto.RemediationPlan;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,4 +32,12 @@ public class DecisionAudit {
     private String prompt;
     private String rawResponse;
     private DecisionResponse decisionResponse;
+    private RemediationPlan remediationPlan;
+    private List<String> historicalEvidenceIds;
+    private String jiraKey;
+    private String jiraUrl;
+    private String jiraStatus;
+    private String jiraAssignee;
+    private LocalDateTime jiraCreatedAt;
+    private String jiraTriggeredBy;
 }

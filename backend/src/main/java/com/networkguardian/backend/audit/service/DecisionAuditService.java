@@ -37,4 +37,35 @@ public class DecisionAuditService {
     public Optional<DecisionAudit> findByDecisionId(String decisionId) {
         return decisionAuditRepository.findByDecisionId(decisionId);
     }
+
+    public Optional<DecisionAudit> findLatestByFindingId(String findingId, String module) {
+        return decisionAuditRepository.findTopByIncidentIdAndModuleOrderByTimestampDesc(findingId, module);
+    }
+
+    public List<DecisionAudit> findByFindingIds(List<String> findingIds, String module) {
+        if (findingIds == null || findingIds.isEmpty()) {
+            return List.of();
+        }
+        return decisionAuditRepository.findByIncidentIdInAndModule(findingIds, module);
+    }
+
+    public Optional<DecisionAudit> findLatestRemediationPlan(String findingId, String module) {
+        return decisionAuditRepository.findTopByIncidentIdAndModuleAndRemediationPlanIsNotNullOrderByTimestampDesc(
+                findingId, module);
+    }
+
+    public Optional<DecisionAudit> findExistingJiraTicket(String findingId, String module) {
+        return decisionAuditRepository.findTopByIncidentIdAndModuleAndJiraKeyIsNotNullOrderByJiraCreatedAtDesc(
+                findingId, module);
+    }
+
+    public void recordJiraTicket(DecisionAudit audit, String jiraKey, String jiraUrl,
+                                 String assignee, String status, java.time.LocalDateTime createdAt) {
+        audit.setJiraKey(jiraKey);
+        audit.setJiraUrl(jiraUrl);
+        audit.setJiraAssignee(assignee);
+        audit.setJiraStatus(status);
+        audit.setJiraCreatedAt(createdAt);
+        save(audit);
+    }
 }
