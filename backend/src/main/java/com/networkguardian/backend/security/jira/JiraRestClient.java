@@ -2,6 +2,9 @@ package com.networkguardian.backend.security.jira;
 
 import java.net.http.HttpClient;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -98,6 +101,35 @@ public class JiraRestClient implements JiraClient {
         } catch (JiraClientException exception) {
             throw exception;
         } catch (RestClientException exception) {
+            throw new JiraClientException("Jira is unavailable", exception);
+        }
+    }
+
+    @Override
+    public JiraIssueStatus getIssueStatus(String issueKey) {
+        try {
+            JsonNode response = restClient.get()
+                    .uri(uriBuilder -> uriBuilder.path("/rest/api/3/issue/{key}")
+                            .queryParam("fields", "status,assignee,updated").build(issueKey))
+                    .headers(headers -> addAuth(headers))
+                    .retrieve()
+                    .onStatus(HttpStatusCode::isError, (request, responseError) -> {
+                        throw new JiraClientException("Jira issue status lookup failed with status "
+                                + responseError.getStatusCode());
+                    })
+                    .body(JsonNode.class);
+            String status = response == null ? null : response.path("fields").path("status").path("name").asText(null);
+            if (status == null || status.isBlank()) {
+                throw new JiraClientException("Jira returned no issue status");
+            }
+            String accountId = response.path("fields").path("assignee").path("accountId").asText(null);
+            String updated = response.path("fields").path("updated").asText(null);
+            LocalDateTime lastUpdated = updated == null || updated.isBlank()
+                    ? null : OffsetDateTime.parse(updated).withOffsetSameInstant(ZoneOffset.UTC).toLocalDateTime();
+            return new JiraIssueStatus(issueKey, status, accountId, lastUpdated);
+        } catch (JiraClientException exception) {
+            throw exception;
+        } catch (RuntimeException exception) {
             throw new JiraClientException("Jira is unavailable", exception);
         }
     }

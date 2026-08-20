@@ -126,6 +126,37 @@ class JiraIntegrationServiceTest {
         verify(jiraClient, never()).createIssue(any(), any(), any(), any(), any());
     }
 
+        @Test
+        void retrievesAndNormalizesJiraStatus() {
+                when(jiraClient.getIssueStatus("SEC-7")).thenReturn(
+                                new JiraClient.JiraIssueStatus("SEC-7", "In Development", "account-7", LocalDateTime.now()));
+                DecisionAudit existing = DecisionAudit.builder().jiraKey("SEC-7").jiraUrl("https://jira.example/browse/SEC-7")
+                                .remediationPlan(plan("F-1", "High")).build();
+                when(auditService.findExistingJiraTicket("F-1", "SECURITY")).thenReturn(Optional.of(existing));
+
+                var response = service.getStatus("F-1");
+
+                assertThat(response.getRemediationState()).isEqualTo("IN_PROGRESS");
+                assertThat(response.getJiraStatus()).isEqualTo("In Development");
+                verify(auditService).save(existing);
+        }
+
+        @Test
+        void reportsStatusUnavailableAndMissingFinding() {
+                DecisionAudit existing = DecisionAudit.builder().jiraKey("SEC-7").build();
+                when(auditService.findExistingJiraTicket("F-1", "SECURITY")).thenReturn(Optional.of(existing));
+                when(jiraClient.getIssueStatus("SEC-7")).thenThrow(new JiraClientException("offline"));
+
+                assertThatThrownBy(() -> service.getStatus("F-1"))
+                                .isInstanceOf(ResponseStatusException.class)
+                                .hasMessageContaining("status is unavailable");
+
+                when(findingRepository.findById("missing-finding")).thenReturn(Optional.empty());
+                assertThatThrownBy(() -> service.getStatus("missing-finding"))
+                                .isInstanceOf(ResponseStatusException.class)
+                                .hasMessageContaining("Security finding not found");
+        }
+
     private RemediationPlan plan(String findingId, String severity) {
         return RemediationPlan.builder().planId("PLAN-1").findingId(findingId).title("Firewall drift")
                 .severity(severity).summary("Fix drift").businessImpact("Exposure")

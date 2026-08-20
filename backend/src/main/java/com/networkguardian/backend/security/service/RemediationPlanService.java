@@ -115,6 +115,7 @@ public class RemediationPlanService {
                 .prompt(prompt)
                 .rawResponse(aiResponse.getContent())
                 .remediationPlan(plan)
+                .originalFinding(finding)
                 .historicalEvidenceIds(historicalFindings.stream().map(candidate -> candidate.getId()).toList())
                 .build());
         return plan;

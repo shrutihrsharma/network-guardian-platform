@@ -3,7 +3,7 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { catchError, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { DecisionResponse } from '../models/decision-response.model';
-import { JiraTicketResponse, RemediationPlan, SecurityFinding } from '../models/security-finding.model';
+import { JiraTicketResponse, RemediationPlan, RemediationStatusResponse, RemediationVerificationResponse, SecurityFinding } from '../models/security-finding.model';
 
 @Injectable({ providedIn: 'root' })
 export class SecurityApiService {
@@ -54,6 +54,18 @@ export class SecurityApiService {
   createJiraTicket(id: string) {
     return this.http
       .post<JiraTicketResponse>(`${this.base}/${id}/remediation-plan/jira`, {})
+      .pipe(catchError(this.handleError));
+  }
+
+  getRemediationStatus(id: string) {
+    return this.http
+      .get<RemediationStatusResponse>(`${this.base}/${id}/remediation-status`)
+      .pipe(catchError(this.handleError));
+  }
+
+  verifyRemediation(id: string) {
+    return this.http
+      .post<RemediationVerificationResponse>(`${this.base}/${id}/remediation-status/verify`, {})
       .pipe(catchError(this.handleError));
   }
 

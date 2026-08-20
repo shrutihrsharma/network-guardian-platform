@@ -17,8 +17,11 @@ import com.networkguardian.backend.security.dto.RemediationPlan;
 import com.networkguardian.backend.security.service.RemediationPlanService;
 import com.networkguardian.backend.security.service.JiraIntegrationService;
 import com.networkguardian.backend.security.dto.JiraTicketResponse;
+import com.networkguardian.backend.security.dto.RemediationStatusResponse;
+import com.networkguardian.backend.security.dto.RemediationVerificationResponse;
 import com.networkguardian.backend.security.service.SecurityDecisionService;
 import com.networkguardian.backend.security.service.SecurityFindingService;
+import com.networkguardian.backend.security.service.RemediationVerificationService;
 
 @RestController
 @RequestMapping("/api/security/findings")
@@ -28,16 +31,19 @@ public class SecurityFindingController {
     private final SecurityDecisionService securityDecisionService;
     private final RemediationPlanService remediationPlanService;
     private final JiraIntegrationService jiraIntegrationService;
+    private final RemediationVerificationService remediationVerificationService;
 
     public SecurityFindingController(
             SecurityFindingService securityFindingService,
             SecurityDecisionService securityDecisionService,
             RemediationPlanService remediationPlanService,
-            JiraIntegrationService jiraIntegrationService) {
+            JiraIntegrationService jiraIntegrationService,
+            RemediationVerificationService remediationVerificationService) {
         this.securityFindingService = securityFindingService;
         this.securityDecisionService = securityDecisionService;
         this.remediationPlanService = remediationPlanService;
         this.jiraIntegrationService = jiraIntegrationService;
+        this.remediationVerificationService = remediationVerificationService;
     }
 
     @GetMapping
@@ -81,6 +87,16 @@ public class SecurityFindingController {
     @PostMapping("/{id}/remediation-plan/jira")
     public ResponseEntity<JiraTicketResponse> createJiraTicket(@PathVariable String id) {
         return ResponseEntity.ok(jiraIntegrationService.createIssue(id));
+    }
+
+    @GetMapping("/{id}/remediation-status")
+    public ResponseEntity<RemediationStatusResponse> getRemediationStatus(@PathVariable String id) {
+        return ResponseEntity.ok(jiraIntegrationService.getStatus(id));
+    }
+
+    @PostMapping("/{id}/remediation-status/verify")
+    public ResponseEntity<RemediationVerificationResponse> verifyRemediation(@PathVariable String id) {
+        return ResponseEntity.ok(remediationVerificationService.verify(id));
     }
 }
 

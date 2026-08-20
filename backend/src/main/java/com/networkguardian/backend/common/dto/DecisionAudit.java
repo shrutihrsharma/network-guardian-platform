@@ -7,6 +7,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.networkguardian.backend.security.dto.RemediationPlan;
+import com.networkguardian.backend.security.model.SecurityFinding;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,7 +38,16 @@ public class DecisionAudit {
     private String jiraKey;
     private String jiraUrl;
     private String jiraStatus;
+    private String jiraRemediationState;
     private String jiraAssignee;
     private LocalDateTime jiraCreatedAt;
     private String jiraTriggeredBy;
+    private List<String> jiraStatusHistory;
+    private SecurityFinding originalFinding;
+    private LocalDateTime verificationTimestamp;
+    private String verificationResult;
+    private String verificationReason;
+    private List<String> verificationEvidence;
+    private Integer verificationPreviousRiskScore;
+    private Integer verificationCurrentRiskScore;
 }

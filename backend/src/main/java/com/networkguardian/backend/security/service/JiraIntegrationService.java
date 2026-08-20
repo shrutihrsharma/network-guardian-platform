@@ -1,6 +1,9 @@
 package com.networkguardian.backend.security.service;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -11,6 +14,7 @@ import com.networkguardian.backend.audit.service.DecisionAuditService;
 import com.networkguardian.backend.common.dto.DecisionAudit;
 import com.networkguardian.backend.security.dto.JiraTicketResponse;
 import com.networkguardian.backend.security.dto.RemediationPlan;
+import com.networkguardian.backend.security.dto.RemediationStatusResponse;
 import com.networkguardian.backend.security.jira.JiraClient;
 import com.networkguardian.backend.security.jira.JiraRestClient.JiraClientException;
 import com.networkguardian.backend.repository.SecurityFindingRepository;
@@ -29,6 +33,14 @@ public class JiraIntegrationService {
     private final String highPriority;
     private final String mediumPriority;
     private final String lowPriority;
+    @Value("${jira.status.open:open,to do,new,reopened}")
+    private String openStatuses;
+    @Value("${jira.status.in-progress:in progress,in development,started}")
+    private String inProgressStatuses;
+    @Value("${jira.status.blocked:blocked,impediment}")
+    private String blockedStatuses;
+    @Value("${jira.status.resolved:resolved,done,closed}")
+    private String resolvedStatuses;
 
     public JiraIntegrationService(
             DecisionAuditService auditService,
@@ -69,6 +81,61 @@ public class JiraIntegrationService {
                 .map(existing -> ticketResponse(existing, "ALREADY_EXISTS"))
                 .orElseGet(() -> createNewTicket(planAudit, plan));
     }
+
+        public RemediationStatusResponse getStatus(String findingId) {
+            if (findingRepository.findById(findingId).isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Security finding not found: " + findingId);
+            }
+        DecisionAudit audit = auditService.findExistingJiraTicket(findingId, MODULE)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "Jira remediation ticket not found for security finding: " + findingId));
+        JiraClient.JiraIssueStatus status;
+        try {
+            status = jiraClient.getIssueStatus(audit.getJiraKey());
+        } catch (RuntimeException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
+                "Jira status is unavailable.", exception);
+        }
+        String remediationState = normalizeState(status.status());
+        audit.setJiraStatus(status.status());
+        audit.setJiraRemediationState(remediationState);
+        audit.setJiraAssignee(status.assignee());
+        if (audit.getJiraStatusHistory() == null) audit.setJiraStatusHistory(new java.util.ArrayList<>());
+        String historyEntry = status.status() + " @ "
+            + (status.lastUpdated() == null ? LocalDateTime.now() : status.lastUpdated());
+        if (audit.getJiraStatusHistory().isEmpty()
+            || !audit.getJiraStatusHistory().get(audit.getJiraStatusHistory().size() - 1).equals(historyEntry)) {
+            audit.getJiraStatusHistory().add(historyEntry);
+        }
+        auditService.save(audit);
+        return RemediationStatusResponse.builder()
+            .findingId(findingId)
+            .remediationPlanId(audit.getRemediationPlan() == null ? null : audit.getRemediationPlan().getPlanId())
+            .jiraKey(audit.getJiraKey())
+            .jiraUrl(audit.getJiraUrl())
+            .jiraStatus(status.status())
+            .assignee(status.assignee())
+            .lastUpdated(status.lastUpdated())
+            .remediationState(remediationState)
+            .build();
+        }
+
+        private String normalizeState(String status) {
+        String normalized = status == null ? "" : status.trim().toLowerCase(Locale.ROOT);
+        if (configured(resolvedStatuses).contains(normalized) || normalized.contains("resolv")
+            || normalized.equals("done") || normalized.equals("closed")) return "RESOLVED";
+        if (configured(blockedStatuses).contains(normalized) || normalized.contains("block")
+            || normalized.contains("impediment")) return "BLOCKED";
+        if (configured(inProgressStatuses).contains(normalized) || normalized.contains("progress")
+            || normalized.contains("development") || normalized.equals("started")) return "IN_PROGRESS";
+        return "OPEN";
+        }
+
+        private Set<String> configured(String statuses) {
+        return Arrays.stream((statuses == null ? "" : statuses).split(","))
+            .map(value -> value.trim().toLowerCase(Locale.ROOT)).filter(value -> !value.isBlank()).collect(java.util.stream.Collectors.toSet());
+        }
 
     private JiraTicketResponse createNewTicket(DecisionAudit planAudit, RemediationPlan plan) {
         if (isBlank(baseUrl) || isBlank(projectKey)) {

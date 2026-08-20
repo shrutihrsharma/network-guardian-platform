@@ -60,6 +60,28 @@ export interface JiraTicketResponse {
   createdAt: string;
 }
 
+export interface RemediationStatusResponse {
+  findingId: string;
+  remediationPlanId?: string;
+  jiraKey: string;
+  jiraUrl: string;
+  jiraStatus: string;
+  assignee?: string;
+  lastUpdated?: string;
+  remediationState: 'OPEN' | 'IN_PROGRESS' | 'BLOCKED' | 'RESOLVED';
+}
+
+export interface RemediationVerificationResponse {
+  findingId: string;
+  jiraKey: string;
+  result: 'VERIFIED' | 'NOT_VERIFIED';
+  reason: string;
+  evidence: string[];
+  previousRiskScore?: number;
+  currentRiskScore?: number;
+  verifiedAt: string;
+}
+
 export interface SecurityFindingsFilters {
   vendor: string;
   region: string;

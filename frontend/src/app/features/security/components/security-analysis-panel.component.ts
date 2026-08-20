@@ -5,7 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DecisionEvidenceItem, DecisionResponse } from '../../../core/models/decision-response.model';
 import { SecurityApiService } from '../../../core/services/security-api.service';
-import { JiraTicketResponse, RemediationPlan, SecurityFinding } from '../../../core/models/security-finding.model';
+import { JiraTicketResponse, RemediationPlan, RemediationStatusResponse, RemediationVerificationResponse, SecurityFinding } from '../../../core/models/security-finding.model';
 
 @Component({
   selector: 'app-security-analysis-panel',
@@ -102,6 +102,43 @@ import { JiraTicketResponse, RemediationPlan, SecurityFinding } from '../../../c
                   <span>Assigned to: {{ ticket.assigneeName || ticket.assignee || 'Unassigned' }}</span>
                   <a class="jira-link" [href]="ticket.jiraUrl" target="_blank" rel="noopener">Open in Jira</a>
                 </div>
+                @if (remediationStatus(); as status) {
+                  <div class="remediation-status">
+                    <strong>Remediation Status</strong>
+                    <span>{{ status.jiraKey }}</span>
+                    <span>Assigned to: {{ status.assignee || ticket.assigneeName || 'Unassigned' }}</span>
+                    <span>Status: {{ status.remediationState.replaceAll('_', ' ') }}</span>
+                    <span>Last updated: {{ status.lastUpdated | date: 'medium' }}</span>
+                    <div class="status-timeline">
+                      <span class="complete">✓ Finding detected</span>
+                      <span class="complete">✓ AI analysis completed</span>
+                      <span class="complete">✓ Remediation plan generated</span>
+                      <span class="complete">✓ Jira ticket created</span>
+                      <span [class.complete]="status.remediationState === 'IN_PROGRESS' || status.remediationState === 'BLOCKED' || status.remediationState === 'RESOLVED'">→ Remediation in progress</span>
+                      <span [class.complete]="verification()">{{ verification() ? '✓ Risk verification completed' : '○ Risk verification pending' }}</span>
+                      <span [class.complete]="verification()?.result === 'VERIFIED'">{{ verification()?.result === 'VERIFIED' ? '✓ Compliance restored' : '○ Compliance restored' }}</span>
+                    </div>
+                    <div class="status-actions">
+                      <button mat-stroked-button class="secondary-action" type="button" [disabled]="statusLoading()" (click)="refreshStatus()">Refresh Status</button>
+                      @if (status.remediationState === 'RESOLVED') {
+                        <button mat-flat-button class="primary-action" type="button" [disabled]="verificationLoading()" (click)="verifyRemediation()">
+                          {{ verificationLoading() ? 'Verifying...' : 'Verify Remediation' }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+                @if (verification(); as verificationResult) {
+                  <div class="verification-result" [class.not-verified]="verificationResult.result === 'NOT_VERIFIED'">
+                    <strong>Remediation Verification</strong>
+                    <span>{{ verificationResult.result === 'VERIFIED' ? '✓ REMEDIATION VERIFIED' : '⚠ REMEDIATION NOT VERIFIED' }}</span>
+                    <span>{{ verificationResult.reason }}</span>
+                    @for (item of verificationResult.evidence; track item) { <span>• {{ item }}</span> }
+                    @if (verificationResult.previousRiskScore && verificationResult.currentRiskScore) {
+                      <span>Risk Score {{ verificationResult.previousRiskScore }} → {{ verificationResult.currentRiskScore }}</span>
+                    }
+                  </div>
+                }
               } @else if (jiraConfirmation()) {
                 <div class="jira-confirmation">
                   <strong>Create a Jira remediation ticket for this finding?</strong>
@@ -507,6 +544,10 @@ export class SecurityAnalysisPanelComponent {
   protected readonly jiraLoading = signal(false);
   protected readonly jiraConfirmation = signal(false);
   protected readonly jiraTicket = signal<JiraTicketResponse | null>(null);
+  protected readonly remediationStatus = signal<RemediationStatusResponse | null>(null);
+  protected readonly statusLoading = signal(false);
+  protected readonly verification = signal<RemediationVerificationResponse | null>(null);
+  protected readonly verificationLoading = signal(false);
   protected readonly errorMsg = signal<string | null>(null);
   protected readonly simulationVisible = signal(false);
   protected readonly simulationRunning = signal(false);
@@ -543,6 +584,8 @@ export class SecurityAnalysisPanelComponent {
       this.remediationPlan.set(null);
       this.jiraConfirmation.set(false);
       this.jiraTicket.set(null);
+      this.remediationStatus.set(null);
+      this.verification.set(null);
       this.errorMsg.set(null);
       this.resetSimulation();
     });
@@ -611,11 +654,33 @@ export class SecurityAnalysisPanelComponent {
         this.jiraTicket.set(ticket);
         this.jiraConfirmation.set(false);
         this.jiraLoading.set(false);
+        this.refreshStatus();
       },
       error: (error: Error) => {
         this.errorMsg.set(error.message || 'Unable to create Jira ticket.');
         this.jiraLoading.set(false);
       }
+    });
+  }
+
+  protected refreshStatus(): void {
+    const selected = this.finding();
+    if (!selected || this.statusLoading()) return;
+    this.statusLoading.set(true);
+    this.securityApiService.getRemediationStatus(selected.id).subscribe({
+      next: (status) => { this.remediationStatus.set(status); this.statusLoading.set(false); },
+      error: (error: Error) => { this.errorMsg.set(error.message || 'Unable to load Jira status.'); this.statusLoading.set(false); }
+    });
+  }
+
+  protected verifyRemediation(): void {
+    const selected = this.finding();
+    if (!selected || this.verificationLoading() || this.remediationStatus()?.remediationState !== 'RESOLVED') return;
+    this.verificationLoading.set(true);
+    this.errorMsg.set(null);
+    this.securityApiService.verifyRemediation(selected.id).subscribe({
+      next: (result) => { this.verification.set(result); this.verificationLoading.set(false); },
+      error: (error: Error) => { this.errorMsg.set(error.message || 'Unable to verify remediation.'); this.verificationLoading.set(false); }
     });
   }
 
